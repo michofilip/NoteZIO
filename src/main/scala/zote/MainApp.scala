@@ -5,10 +5,10 @@ import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.*
 import zio.http.Server
 import zote.config.*
-import zote.controllers.{HealthController, HttpApi, NoteController, UserController}
+import zote.controllers.*
 import zote.db.QuillContext
-import zote.db.repositories.{NoteRepository, UserRepository}
-import zote.services.{FlywayService, FlywayServiceImpl, NoteService, UserService}
+import zote.db.repositories.*
+import zote.services.*
 
 object MainApp extends ZIOAppDefault {
 
@@ -38,6 +38,7 @@ object MainApp extends ZIOAppDefault {
 
         NoteRepository.layer,
         UserRepository.layer,
+        NoteUserRepository.layer,
 
         QuillContext.layer,
 

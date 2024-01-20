@@ -10,11 +10,11 @@ trait UserRepository {
 
     def findById(id: Long): Task[Option[UserEntity]]
 
-    def save(userEntity: UserEntity): Task[Long]
+    def save(userEntity: UserEntity): Task[UserEntity]
 
-    def delete(id: Long): Task[Unit]
+    def delete(id: Long): Task[UserEntity]
 
-    def findMissing(ids: Set[Long]): Task[List[Long]]
+    def findExistingIds(ids: Set[Long]): Task[List[Long]]
 }
 
 object UserRepository {
@@ -36,7 +36,7 @@ case class UserRepositoryImpl(
             .map(_.headOption)
     }
 
-    override def save(userEntity: UserEntity): Task[Long] = {
+    override def save(userEntity: UserEntity): Task[UserEntity] = {
         if (userEntity.id == 0) {
             run(insertNote(lift(userEntity)))
         } else {
@@ -44,22 +44,19 @@ case class UserRepositoryImpl(
         }
     }
 
-    override def delete(id: Long): Task[Unit] = {
-        run(query[UserEntity].filter(u => u.id == lift(id)).delete).unit
+    override def delete(id: Long): Task[UserEntity] = {
+        run(query[UserEntity].filter(u => u.id == lift(id)).delete.returning(u => u))
     }
 
-    override def findMissing(ids: Set[Long]): Task[List[Long]] = {
-        for {
-            foundId <- run(query[UserEntity].filter(u => liftQuery(ids).contains(u.id)).map(_.id))
-            missingIds <- ZIO.succeed(ids -- foundId)
-        } yield missingIds.toList
+    override def findExistingIds(ids: Set[Long]): Task[List[Long]] = {
+        run(query[UserEntity].filter(u => liftQuery(ids).contains(u.id)).map(_.id))
     }
 
     private inline def insertNote = quote { (userEntity: UserEntity) =>
-        query[UserEntity].insertValue(userEntity).returning(_.id)
+        query[UserEntity].insertValue(userEntity).returning(u => u)
     }
 
     private inline def updateNote = quote { (userEntity: UserEntity) =>
-        query[UserEntity].filter(u => u.id == userEntity.id).updateValue(userEntity).returning(_.id)
+        query[UserEntity].filter(u => u.id == userEntity.id).updateValue(userEntity).returning(u => u)
     }
 }

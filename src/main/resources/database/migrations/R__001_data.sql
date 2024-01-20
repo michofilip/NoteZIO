@@ -12,7 +12,7 @@ VALUES ('Ala'),
 
 INSERT INTO public.note_user(note_id, user_id)
 VALUES (1, 1),
-       (1, 1),
+       (1, 2),
        (2, 2),
        (3, 3),
        (4, 4);

@@ -3,9 +3,9 @@ package zote.services
 import com.softwaremill.quicklens.*
 import zio.*
 import zote.db.QuillContext
-import zote.db.model.{NoteEntity, UserEntity}
-import zote.db.repositories.{NoteRepository, UserRepository}
-import zote.dto.{Note, NoteForm, User}
+import zote.db.model.NoteEntity
+import zote.db.repositories.{NoteRepository, NoteUserRepository}
+import zote.dto.{Note, NoteForm}
 import zote.exceptions.NotFoundException
 
 trait NoteService {
@@ -26,47 +26,48 @@ object NoteService {
 
 case class NoteServiceImpl(
     private val noteRepository: NoteRepository,
-    private val userRepository: UserRepository,
+    private val noteUserRepository: NoteUserRepository,
+    private val userService: UserService,
     private val quillContext: QuillContext
 ) extends NoteService {
 
     import quillContext.postgres.*
 
     override def getAll: Task[Seq[Note]] = transaction {
-        noteRepository.findAll.map(toDtos)
+        noteRepository.findAll.flatMap(toDtos)
     }
 
     override def getById(id: Long): Task[Note] = transaction {
-        getEntityById(id).map(toDto)
+        getEntityById(id).flatMap(toDto)
     }
 
     override def create(noteForm: NoteForm): Task[Note] = transaction {
         for {
             _ <- NoteForm.validateZIO(noteForm)
-            _ <- validateUsersExist(noteForm.userIds)
+            _ <- userService.validateUsersExist(noteForm.userIds)
             noteEntity <- ZIO.succeed {
                 NoteEntity(title = noteForm.title, message = noteForm.message, status = noteForm.status)
             }
-            id <- noteRepository.save(noteEntity)
-            _ <- noteRepository.updateNoteUsers(id, noteForm.userIds.toSeq)
-            note <- getById(id)
+            noteEntity <- noteRepository.save(noteEntity)
+            _ <- noteUserRepository.updateNoteUsers(noteEntity.id, noteForm.userIds.toSeq)
+            note <- toDto(noteEntity)
         } yield note
     }
 
     override def update(id: Long, noteForm: NoteForm): Task[Note] = transaction {
         for {
             _ <- NoteForm.validateZIO(noteForm)
-            _ <- validateUsersExist(noteForm.userIds)
-            noteEntity <- getEntityById(id).map(_._1)
+            _ <- userService.validateUsersExist(noteForm.userIds)
+            noteEntity <- getEntityById(id)
             noteEntity <- ZIO.succeed {
                 noteEntity
                     .modify(_.title).setTo(noteForm.title)
                     .modify(_.message).setTo(noteForm.message)
                     .modify(_.status).setTo(noteForm.status)
             }
-            id <- noteRepository.save(noteEntity)
-            _ <- noteRepository.updateNoteUsers(id, noteForm.userIds.toSeq)
-            note <- getById(id)
+            noteEntity <- noteRepository.save(noteEntity)
+            _ <- noteUserRepository.updateNoteUsers(noteEntity.id, noteForm.userIds.toSeq)
+            note <- toDto(noteEntity)
         } yield note
     }
 
@@ -77,39 +78,29 @@ case class NoteServiceImpl(
         } yield ()
     }
 
-    private def getEntityById(id: Long): Task[(NoteEntity, Seq[UserEntity])] = {
-        noteRepository.findById(id).flatMap {
-            case Some(note) => ZIO.succeed(note)
-            case None => ZIO.fail(NotFoundException(s"Note id: $id not found"))
-        }
+    private def getEntityById(id: Long): Task[NoteEntity] = {
+        noteRepository.findById(id).someOrFail(NotFoundException(s"Note id: $id not found"))
     }
 
-    private def toDto(noteEntityWithUsers: (NoteEntity, Seq[UserEntity])): Note = {
-        val (noteEntity, userEntities) = noteEntityWithUsers
-        val users = userEntities.map { userEntity =>
-            User(
-                id = userEntity.id,
-                name = userEntity.name
-            )
-        }
-
-        Note(
-            id = noteEntity.id,
-            message = noteEntity.message,
-            title = noteEntity.title,
-            status = noteEntity.status,
-            users = users
-        )
-    }
-
-    private def toDtos(noteEntitiesWithUsers: Seq[(NoteEntity, Seq[UserEntity])]): Seq[Note] = {
-        noteEntitiesWithUsers.map(toDto)
-    }
-
-    private def validateUsersExist(userIds: Set[Long]): Task[Unit] = {
+    private def toDtos(noteEntities: Seq[NoteEntity]): Task[List[Note]] = {
         for {
-            missingIds <- userRepository.findMissing(userIds)
-            _ <- ZIO.unless(missingIds.isEmpty)(ZIO.fail(NotFoundException(s"Users ids: ${missingIds.mkString(", ")} not found")))
-        } yield ()
+            noteIds <- ZIO.succeed(noteEntities.map(_.id))
+            usersByNoteId <- userService.getUsersByNoteIds(noteIds)
+            notes <- ZIO.succeed {
+                noteEntities.map { noteEntity =>
+                    Note(
+                        id = noteEntity.id,
+                        message = noteEntity.message,
+                        title = noteEntity.title,
+                        status = noteEntity.status,
+                        users = usersByNoteId.getOrElse(noteEntity.id, List.empty)
+                    )
+                }.toList
+            }
+        } yield notes
+    }
+
+    private def toDto(noteEntity: NoteEntity): Task[Note] = {
+        toDtos(List(noteEntity)).map(_.head)
     }
 }
