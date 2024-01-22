@@ -7,18 +7,18 @@ CREATE TABLE public.note
     CONSTRAINT note_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE public.user
+CREATE TABLE "user"
 (
     id   BIGSERIAL   NOT NULL,
     name VARCHAR(50) NOT NULL,
-    CONSTRAINT user_pk PRIMARY KEY (id)
+    PRIMARY KEY (id)
 );
 
-CREATE TABLE public.note_user
+CREATE TABLE note_user
 (
     note_id BIGINT NOT NULL,
     user_id BIGINT NOT NULL,
     PRIMARY KEY (note_id, user_id),
-    CONSTRAINT note_user_note_fk FOREIGN KEY (note_id) REFERENCES public.note (id),
-    CONSTRAINT note_user_user_fk FOREIGN KEY (user_id) REFERENCES public.user (id)
+    FOREIGN KEY (note_id) REFERENCES note (id),
+    FOREIGN KEY (user_id) REFERENCES "user" (id)
 );

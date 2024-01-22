@@ -1,7 +1,6 @@
 package zote
 
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
-import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.*
 import zio.http.Server
 import zote.config.*
@@ -13,15 +12,14 @@ import zote.services.*
 object MainApp extends ZIOAppDefault {
 
     private val app = for {
-        _ <- FlywayService.run
         _ <- ZIO.logInfo("Welcome to Zote")
 
         routes <- HttpApi.routesZIO
-        endpoints <- HttpApi.endpointsZIO
+        swaggerRoutes <- SwaggerApi.routesZIO
         port <- Server.install(
             ZioHttpInterpreter(
                 ZioHttpServerOptions.default
-            ).toHttp(routes ++ SwaggerInterpreter().fromEndpoints[Task](endpoints, "Zote", "0.1.0-SNAPSHOT"))
+            ).toHttp(routes ++ swaggerRoutes)
         )
         _ <- ZIO.logInfo(s"Server started at port: $port")
 
@@ -42,11 +40,9 @@ object MainApp extends ZIOAppDefault {
 
         QuillContext.layer,
 
-        FlywayService.layer,
         ServerConfig.layer,
         SLF4JConfig.layer,
         DbConfig.layer,
-        FlywayConfig.layer,
 
         ZLayer.Debug.mermaid
     ).exitCode

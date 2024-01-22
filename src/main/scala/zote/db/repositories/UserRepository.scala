@@ -10,7 +10,7 @@ trait UserRepository {
 
     def findById(id: Long): Task[Option[UserEntity]]
 
-    def save(userEntity: UserEntity): Task[UserEntity]
+    def upsert(userEntity: UserEntity): Task[UserEntity]
 
     def delete(id: Long): Task[UserEntity]
 
@@ -36,11 +36,11 @@ case class UserRepositoryImpl(
             .map(_.headOption)
     }
 
-    override def save(userEntity: UserEntity): Task[UserEntity] = {
+    override def upsert(userEntity: UserEntity): Task[UserEntity] = {
         if (userEntity.id == 0) {
-            run(insertNote(lift(userEntity)))
+            run(insert(lift(userEntity)))
         } else {
-            run(updateNote(lift(userEntity)))
+            run(update(lift(userEntity)))
         }
     }
 
@@ -52,11 +52,11 @@ case class UserRepositoryImpl(
         run(query[UserEntity].filter(u => liftQuery(ids).contains(u.id)).map(_.id))
     }
 
-    private inline def insertNote = quote { (userEntity: UserEntity) =>
+    private inline def insert = quote { (userEntity: UserEntity) =>
         query[UserEntity].insertValue(userEntity).returning(u => u)
     }
 
-    private inline def updateNote = quote { (userEntity: UserEntity) =>
+    private inline def update = quote { (userEntity: UserEntity) =>
         query[UserEntity].filter(u => u.id == userEntity.id).updateValue(userEntity).returning(u => u)
     }
 }

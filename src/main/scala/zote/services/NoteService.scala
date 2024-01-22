@@ -41,31 +41,26 @@ case class NoteServiceImpl(
         getEntityById(id).flatMap(toDto)
     }
 
-    override def create(noteForm: NoteForm): Task[Note] = transaction {
-        for {
-            _ <- NoteForm.validateZIO(noteForm)
-            _ <- userService.validateUsersExist(noteForm.userIds)
-            noteEntity <- ZIO.succeed {
-                NoteEntity(title = noteForm.title, message = noteForm.message, status = noteForm.status)
-            }
-            noteEntity <- noteRepository.save(noteEntity)
-            _ <- noteUserRepository.updateNoteUsers(noteEntity.id, noteForm.userIds.toSeq)
-            note <- toDto(noteEntity)
-        } yield note
+    override def create(noteForm: NoteForm): Task[Note] = upsert(noteForm) {
+        ZIO.succeed {
+            NoteEntity(title = noteForm.title, message = noteForm.message, status = noteForm.status)
+        }
     }
 
-    override def update(id: Long, noteForm: NoteForm): Task[Note] = transaction {
+    override def update(id: Long, noteForm: NoteForm): Task[Note] = upsert(noteForm) {
+        getEntityById(id).map(_
+            .modify(_.title).setTo(noteForm.title)
+            .modify(_.message).setTo(noteForm.message)
+            .modify(_.status).setTo(noteForm.status)
+        )
+    }
+
+    private def upsert(noteForm: NoteForm)(f: => Task[NoteEntity]): Task[Note] = transaction {
         for {
             _ <- NoteForm.validateZIO(noteForm)
             _ <- userService.validateUsersExist(noteForm.userIds)
-            noteEntity <- getEntityById(id)
-            noteEntity <- ZIO.succeed {
-                noteEntity
-                    .modify(_.title).setTo(noteForm.title)
-                    .modify(_.message).setTo(noteForm.message)
-                    .modify(_.status).setTo(noteForm.status)
-            }
-            noteEntity <- noteRepository.save(noteEntity)
+            noteEntity <- f
+            noteEntity <- noteRepository.upsert(noteEntity)
             _ <- noteUserRepository.updateNoteUsers(noteEntity.id, noteForm.userIds.toSeq)
             note <- toDto(noteEntity)
         } yield note

@@ -34,10 +34,12 @@ case class NoteUserRepositoryImpl(
     override def updateNoteUsers(noteId: Long, userIds: Seq[Long]): Task[Unit] = transaction {
         for {
             currentUserIds <- run(query[NoteUserEntity].filter(nu => nu.noteId == lift(noteId)).map(_.userId))
+
             userIdsToDelete <- ZIO.succeed(currentUserIds.filterNot(userIds.contains))
+            _ <- run(query[NoteUserEntity].filter(nu => nu.noteId == lift(noteId) && liftQuery(userIdsToDelete).contains(nu.userId)).delete)
+
             userIdsToAdd <- ZIO.succeed(userIds.filterNot(currentUserIds.contains))
             noteUserEntities <- ZIO.succeed(userIdsToAdd.map(userId => NoteUserEntity(noteId, userId)))
-            _ <- run(query[NoteUserEntity].filter(nu => nu.noteId == lift(noteId) && liftQuery(userIdsToDelete).contains(nu.userId)).delete)
             _ <- run(liftQuery(noteUserEntities).foreach(nu => query[NoteUserEntity].insertValue(nu)))
         } yield ()
     }

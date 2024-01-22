@@ -44,26 +44,23 @@ case class UserServiceImpl(
         getEntityById(id).flatMap(toDto)
     }
 
-    override def create(userForm: UserForm): Task[User] = transaction {
-        for {
-            _ <- UserForm.validateZIO(userForm)
-            userEntity <- ZIO.succeed {
-                UserEntity(name = userForm.name)
-            }
-            userEntity <- userRepository.save(userEntity)
-            user <- toDto(userEntity)
-        } yield user
+    override def create(userForm: UserForm): Task[User] = upsert(userForm) {
+        ZIO.succeed {
+            UserEntity(name = userForm.name)
+        }
     }
 
-    override def update(id: Long, userForm: UserForm): Task[User] = transaction {
+    override def update(id: Long, userForm: UserForm): Task[User] = upsert(userForm) {
+        getEntityById(id).map(_
+            .modify(_.name).setTo(userForm.name)
+        )
+    }
+
+    private def upsert(userForm: UserForm)(f: => Task[UserEntity]): Task[User] = transaction {
         for {
             _ <- UserForm.validateZIO(userForm)
-            userEntity <- getEntityById(id)
-            userEntity <- ZIO.succeed {
-                userEntity
-                    .modify(_.name).setTo(userForm.name)
-            }
-            userEntity <- userRepository.save(userEntity)
+            userEntity <- f
+            userEntity <- userRepository.upsert(userEntity)
             user <- toDto(userEntity)
         } yield user
     }
