@@ -2,16 +2,16 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "3.3.1"
 
-val zioVersion = "2.0.20"
+val zioVersion = "2.0.21"
 val zioHTTPVersion = "3.0.0-RC4"
 val zioJsonVersion = "0.6.2"
-val zioConfigVersion = "4.0.0-RC16"
-val zioLoggingVersion = "2.1.16"
-val slf4jVersion = "2.0.9"
-val quillVersion = "4.8.0"
+val zioConfigVersion = "4.0.1"
+val zioLoggingVersion = "2.2.0"
+val slf4jVersion = "2.0.11"
+val quillVersion = "4.8.1"
 val postgresqlVersion = "42.7.1"
-val flywayVersion = "10.3.0"
-val quicklensVersion = "1.9.6"
+val flywayVersion = "10.6.0"
+val quicklensVersion = "1.9.7"
 val tapirVersion = "1.9.6"
 
 lazy val root = (project in file("."))
