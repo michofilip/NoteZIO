@@ -7,18 +7,19 @@ CREATE TABLE public.note
     CONSTRAINT note_pk PRIMARY KEY (id)
 );
 
-CREATE TABLE "user"
+CREATE TABLE person
 (
     id   BIGSERIAL   NOT NULL,
     name VARCHAR(50) NOT NULL,
     PRIMARY KEY (id)
 );
 
-CREATE TABLE note_user
+CREATE TABLE note_person
 (
-    note_id BIGINT NOT NULL,
-    user_id BIGINT NOT NULL,
-    PRIMARY KEY (note_id, user_id),
+    note_id   BIGINT  NOT NULL,
+    person_id BIGINT  NOT NULL,
+    owner     BOOLEAN NOT NULL,
+    PRIMARY KEY (note_id, person_id),
     FOREIGN KEY (note_id) REFERENCES note (id),
-    FOREIGN KEY (user_id) REFERENCES "user" (id)
+    FOREIGN KEY (person_id) REFERENCES person (id)
 );

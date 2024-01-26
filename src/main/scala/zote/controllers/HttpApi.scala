@@ -11,7 +11,7 @@ object HttpApi {
     private def controllers = for {
         healthController <- ZIO.service[HealthController]
         noteController <- ZIO.service[NoteController]
-        userController <- ZIO.service[UserController]
+        userController <- ZIO.service[PersonController]
     } yield List(
         healthController,
         noteController,

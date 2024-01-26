@@ -10,7 +10,7 @@ case class NoteForm(
     title: String,
     message: String,
     status: Status,
-    userIds: Set[Long]
+    persons: Set[NotePersonId]
 )
 
 object NoteForm {
@@ -24,7 +24,8 @@ object NoteForm {
             Seq(
                 validateTitleNotBlank(noteForm),
                 validateTitleNotToLong(noteForm),
-                validateMessageNotBlank(noteForm)
+                validateMessageNotBlank(noteForm),
+                validateOwners(noteForm)
             )
         }.unit
 
@@ -36,4 +37,9 @@ object NoteForm {
 
     private def validateMessageNotBlank(noteForm: NoteForm) =
         ZValidation.fromPredicateWith("Message cannot be blank")(noteForm)(noteForm => !noteForm.message.isBlank)
+
+    private def validateOwners(noteForm: NoteForm) =
+        ZValidation.fromPredicateWith("Same person cannot be both owner and not owner")(noteForm) { noteForm =>
+            !noteForm.persons.groupMap(_.personId)(_.owner).values.exists(_.size > 1)
+        }
 }

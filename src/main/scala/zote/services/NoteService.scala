@@ -3,8 +3,8 @@ package zote.services
 import com.softwaremill.quicklens.*
 import zio.*
 import zote.db.QuillContext
-import zote.db.model.NoteEntity
-import zote.db.repositories.{NoteRepository, NoteUserRepository}
+import zote.db.model.{NoteEntity, NotePersonEntity}
+import zote.db.repositories.{NotePersonRepository, NoteRepository}
 import zote.dto.{Note, NoteForm}
 import zote.exceptions.NotFoundException
 
@@ -26,8 +26,8 @@ object NoteService {
 
 case class NoteServiceImpl(
     private val noteRepository: NoteRepository,
-    private val noteUserRepository: NoteUserRepository,
-    private val userService: UserService,
+    private val noteUserRepository: NotePersonRepository,
+    private val personService: PersonService,
     private val quillContext: QuillContext
 ) extends NoteService {
 
@@ -58,10 +58,17 @@ case class NoteServiceImpl(
     private def upsert(noteForm: NoteForm)(f: => Task[NoteEntity]): Task[Note] = transaction {
         for {
             _ <- NoteForm.validateZIO(noteForm)
-            _ <- userService.validateUsersExist(noteForm.userIds)
+            _ <- personService.validatePersonsExist(noteForm.persons.map(_.personId))
             noteEntity <- f
             noteEntity <- noteRepository.upsert(noteEntity)
-            _ <- noteUserRepository.updateNoteUsers(noteEntity.id, noteForm.userIds.toSeq)
+            notePersonEntities <- ZIO.succeed(
+                noteForm.persons.map(person => NotePersonEntity(
+                    noteId = noteEntity.id,
+                    personId = person.personId,
+                    owner = person.owner
+                )).toList
+            )
+            _ <- noteUserRepository.updateNotePersons(notePersonEntities)
             note <- toDto(noteEntity)
         } yield note
     }
@@ -80,7 +87,7 @@ case class NoteServiceImpl(
     private def toDtos(noteEntities: Seq[NoteEntity]): Task[List[Note]] = {
         for {
             noteIds <- ZIO.succeed(noteEntities.map(_.id))
-            usersByNoteId <- userService.getUsersByNoteIds(noteIds)
+            notePersonsByNoteIds <- personService.getNotePersonsByNoteIds(noteIds)
             notes <- ZIO.succeed {
                 noteEntities.map { noteEntity =>
                     Note(
@@ -88,7 +95,7 @@ case class NoteServiceImpl(
                         message = noteEntity.message,
                         title = noteEntity.title,
                         status = noteEntity.status,
-                        users = usersByNoteId.getOrElse(noteEntity.id, List.empty)
+                        persons = notePersonsByNoteIds.getOrElse(noteEntity.id, List.empty)
                     )
                 }.toList
             }

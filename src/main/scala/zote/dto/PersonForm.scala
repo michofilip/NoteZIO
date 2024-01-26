@@ -5,17 +5,17 @@ import zio.json.{DeriveJsonCodec, JsonCodec}
 import zio.prelude.*
 import zote.exceptions.ValidationException
 
-case class UserForm(
+case class PersonForm(
     name: String
 )
 
-object UserForm {
-    given JsonCodec[UserForm] = DeriveJsonCodec.gen
+object PersonForm {
+    given JsonCodec[PersonForm] = DeriveJsonCodec.gen
 
-    def validateZIO(userForm: UserForm): IO[ValidationException, Unit] =
+    def validateZIO(userForm: PersonForm): IO[ValidationException, Unit] =
         validate(userForm).mapError(ValidationException.apply).toZIO
 
-    private def validate(userForm: UserForm): Validation[String, Unit] =
+    private def validate(userForm: PersonForm): Validation[String, Unit] =
         ZValidation.validateAll {
             Seq(
                 validateNameNotBlank(userForm),
@@ -23,9 +23,9 @@ object UserForm {
             )
         }.unit
 
-    private def validateNameNotBlank(userForm: UserForm) =
+    private def validateNameNotBlank(userForm: PersonForm) =
         ZValidation.fromPredicateWith("Title cannot be blank")(userForm)(userForm => !userForm.name.isBlank)
 
-    private def validateNameNotToLong(userForm: UserForm) =
+    private def validateNameNotToLong(userForm: PersonForm) =
         ZValidation.fromPredicateWith("Title cannot be longer then 50 characters")(userForm)(userForm => userForm.name.length <= 50)
 }

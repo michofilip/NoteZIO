@@ -4,15 +4,15 @@ VALUES ('Note 1', 'Message 1', 'Draft'),
        ('Note 3', 'Message 3', 'Ongoing'),
        ('Note 4', 'Message 4', 'Complete');
 
-INSERT INTO "user"(name)
+INSERT INTO person(name)
 VALUES ('Ala'),
        ('Ela'),
        ('Ola'),
        ('Ula');
 
-INSERT INTO note_user(note_id, user_id)
-VALUES (1, 1),
-       (1, 2),
-       (2, 2),
-       (3, 3),
-       (4, 4);
+INSERT INTO note_person(note_id, person_id, owner)
+VALUES (1, 1, TRUE),
+       (1, 2, FALSE),
+       (2, 2, TRUE),
+       (3, 3, TRUE),
+       (4, 4, TRUE);

@@ -29,14 +29,14 @@ object MainApp extends ZIOAppDefault {
     def run = app.provide(
         HealthController.layer,
         NoteController.layer,
-        UserController.layer,
+        PersonController.layer,
 
         NoteService.layer,
-        UserService.layer,
+        PersonService.layer,
 
         NoteRepository.layer,
-        UserRepository.layer,
-        NoteUserRepository.layer,
+        PersonRepository.layer,
+        NotePersonRepository.layer,
 
         QuillContext.layer,
 

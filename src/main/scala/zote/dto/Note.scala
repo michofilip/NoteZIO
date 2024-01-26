@@ -8,7 +8,7 @@ case class Note(
     message: String,
     title: String,
     status: Status,
-    users: List[User]
+    persons: List[NotePerson]
 )
 
 object Note {

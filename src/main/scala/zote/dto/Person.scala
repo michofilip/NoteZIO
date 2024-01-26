@@ -2,11 +2,11 @@ package zote.dto
 
 import zio.json.{DeriveJsonCodec, JsonCodec}
 
-case class User(
+case class Person(
     id: Long,
     name: String
 )
 
-object User {
-    given JsonCodec[User] = DeriveJsonCodec.gen
+object Person {
+    given JsonCodec[Person] = DeriveJsonCodec.gen
 }

@@ -6,75 +6,75 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import sttp.tapir.{AnyEndpoint, path}
 import zio.*
-import zote.dto.{User, UserForm}
-import zote.services.UserService
+import zote.dto.{Person, PersonForm}
+import zote.services.PersonService
 
-class UserController(
-    private val userService: UserService
+class PersonController(
+    private val personService: PersonService
 ) extends Controller {
 
-    private val userEndpoint = endpoint.tag("users")
+    private val personEndpoint = endpoint.tag("persons")
 
-    private val getAllEndpoint = userEndpoint
+    private val getAllEndpoint = personEndpoint
         .name("getAll")
         .description("getAll")
         .get
-        .in("users")
-        .out(jsonBody[Seq[User]])
+        .in("persons")
+        .out(jsonBody[Seq[Person]])
         .errorOut(getErrorOut)
 
-    private val getByIdEndpoint = userEndpoint
+    private val getByIdEndpoint = personEndpoint
         .name("getById")
         .description("getById")
         .get
-        .in("users" / path[Long]("id"))
-        .out(jsonBody[User])
+        .in("persons" / path[Long]("id"))
+        .out(jsonBody[Person])
         .errorOut(getErrorOut)
 
-    private val createEndpoint = userEndpoint
+    private val createEndpoint = personEndpoint
         .name("create")
         .description("create")
         .post
-        .in("users")
-        .in(jsonBody[UserForm])
-        .out(jsonBody[User])
+        .in("persons")
+        .in(jsonBody[PersonForm])
+        .out(jsonBody[Person])
         .errorOut(getErrorOut)
 
-    private val updateEndpoint = userEndpoint
+    private val updateEndpoint = personEndpoint
         .name("update")
         .description("update")
         .put
-        .in("users" / path[Long]("id"))
-        .in(jsonBody[UserForm])
-        .out(jsonBody[User])
+        .in("persons" / path[Long]("id"))
+        .in(jsonBody[PersonForm])
+        .out(jsonBody[Person])
         .errorOut(getErrorOut)
 
-    private val deleteEndpoint = userEndpoint
+    private val deleteEndpoint = personEndpoint
         .name("delete")
         .description("delete")
         .delete
-        .in("users" / path[Long]("id"))
+        .in("persons" / path[Long]("id"))
         .out(emptyOutput)
         .errorOut(getErrorOut)
 
     private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
-        userService.getAll
+        personService.getAll
     }
 
     private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-        userService.getById(id)
+        personService.getById(id)
     }
 
-    private val create = createEndpoint.zServerLogic[Any] { userForm =>
-        userService.create(userForm)
+    private val create = createEndpoint.zServerLogic[Any] { personsForm =>
+        personService.create(personsForm)
     }
 
-    private val update = updateEndpoint.zServerLogic[Any] { case (id, userForm) =>
-        userService.update(id, userForm)
+    private val update = updateEndpoint.zServerLogic[Any] { case (id, personsForm) =>
+        personService.update(id, personsForm)
     }
 
     private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-        userService.delete(id)
+        personService.delete(id)
     }
 
     override val endpoints: List[AnyEndpoint] = List(
@@ -93,6 +93,6 @@ class UserController(
     )
 }
 
-object UserController {
-    lazy val layer = ZLayer.derive[UserController]
+object PersonController {
+    lazy val layer = ZLayer.derive[PersonController]
 }
