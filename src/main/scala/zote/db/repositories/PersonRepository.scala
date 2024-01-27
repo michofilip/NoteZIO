@@ -6,15 +6,15 @@ import zote.db.QuillContext
 import zote.db.model.PersonEntity
 
 trait PersonRepository {
-    def findAll: Task[Seq[PersonEntity]]
+    def findAll: Task[List[PersonEntity]]
 
     def findById(id: Long): Task[Option[PersonEntity]]
 
-    def upsert(userEntity: PersonEntity): Task[PersonEntity]
+    def findByIdIn(ids: Seq[Long]): Task[List[PersonEntity]]
+
+    def upsert(personEntity: PersonEntity): Task[PersonEntity]
 
     def delete(id: Long): Task[PersonEntity]
-
-    def findExistingIds(ids: Set[Long]): Task[List[Long]]
 }
 
 object PersonRepository {
@@ -27,36 +27,36 @@ case class PersonRepositoryImpl(
 
     import quillContext.postgres.*
 
-    override def findAll: Task[Seq[PersonEntity]] = {
+    override def findAll: Task[List[PersonEntity]] = {
         run(query[PersonEntity])
     }
 
     override def findById(id: Long): Task[Option[PersonEntity]] = {
-        run(query[PersonEntity].filter(u => u.id == lift(id)))
+        run(query[PersonEntity].filter(p => p.id == lift(id)))
             .map(_.headOption)
     }
 
-    override def upsert(userEntity: PersonEntity): Task[PersonEntity] = {
-        if (userEntity.id == 0) {
-            run(insert(lift(userEntity)))
+    override def findByIdIn(ids: Seq[Long]): Task[List[PersonEntity]] = {
+        run(query[PersonEntity].filter(p => liftQuery(ids).contains(p.id)))
+    }
+
+    override def upsert(personEntity: PersonEntity): Task[PersonEntity] = {
+        if (personEntity.id == 0) {
+            run(insert(lift(personEntity)))
         } else {
-            run(update(lift(userEntity)))
+            run(update(lift(personEntity)))
         }
     }
 
     override def delete(id: Long): Task[PersonEntity] = {
-        run(query[PersonEntity].filter(u => u.id == lift(id)).delete.returning(u => u))
+        run(query[PersonEntity].filter(p => p.id == lift(id)).delete.returning(p => p))
     }
 
-    override def findExistingIds(ids: Set[Long]): Task[List[Long]] = {
-        run(query[PersonEntity].filter(u => liftQuery(ids).contains(u.id)).map(_.id))
+    private inline def insert = quote { (personEntity: PersonEntity) =>
+        query[PersonEntity].insertValue(personEntity).returning(p => p)
     }
 
-    private inline def insert = quote { (userEntity: PersonEntity) =>
-        query[PersonEntity].insertValue(userEntity).returning(u => u)
-    }
-
-    private inline def update = quote { (userEntity: PersonEntity) =>
-        query[PersonEntity].filter(u => u.id == userEntity.id).updateValue(userEntity).returning(u => u)
+    private inline def update = quote { (personEntity: PersonEntity) =>
+        query[PersonEntity].filter(p => p.id == personEntity.id).updateValue(personEntity).returning(p => p)
     }
 }

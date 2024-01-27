@@ -13,7 +13,7 @@ class PersonController(
     private val personService: PersonService
 ) extends Controller {
 
-    private val personEndpoint = endpoint.tag("persons")
+    private val personEndpoint = baseEndpoint.tag("persons")
 
     private val getAllEndpoint = personEndpoint
         .name("getAll")
@@ -21,7 +21,6 @@ class PersonController(
         .get
         .in("persons")
         .out(jsonBody[Seq[Person]])
-        .errorOut(getErrorOut)
 
     private val getByIdEndpoint = personEndpoint
         .name("getById")
@@ -29,7 +28,6 @@ class PersonController(
         .get
         .in("persons" / path[Long]("id"))
         .out(jsonBody[Person])
-        .errorOut(getErrorOut)
 
     private val createEndpoint = personEndpoint
         .name("create")
@@ -38,7 +36,6 @@ class PersonController(
         .in("persons")
         .in(jsonBody[PersonForm])
         .out(jsonBody[Person])
-        .errorOut(getErrorOut)
 
     private val updateEndpoint = personEndpoint
         .name("update")
@@ -47,7 +44,6 @@ class PersonController(
         .in("persons" / path[Long]("id"))
         .in(jsonBody[PersonForm])
         .out(jsonBody[Person])
-        .errorOut(getErrorOut)
 
     private val deleteEndpoint = personEndpoint
         .name("delete")
@@ -55,7 +51,6 @@ class PersonController(
         .delete
         .in("persons" / path[Long]("id"))
         .out(emptyOutput)
-        .errorOut(getErrorOut)
 
     private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
         personService.getAll

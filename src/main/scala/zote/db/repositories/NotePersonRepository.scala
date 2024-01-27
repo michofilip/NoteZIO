@@ -3,13 +3,19 @@ package zote.db.repositories
 import io.getquill.*
 import zio.*
 import zote.db.QuillContext
-import zote.db.model.{NotePersonEntity, PersonEntity}
+import zote.db.model.NotePersonEntity
 
 trait NotePersonRepository {
 
-    def findByNoteIds(noteIds: Seq[Long]): Task[List[(NotePersonEntity, PersonEntity)]]
+    def findByNoteId(noteId: Long): Task[List[NotePersonEntity]]
 
-    def updateNotePersons(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+    def findByNoteIdIn(noteIds: Seq[Long]): Task[List[NotePersonEntity]]
+
+    def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+
+    def update(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+
+    def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
 }
 
 object NotePersonRepository {
@@ -22,57 +28,35 @@ case class NotePersonRepositoryImpl(
 
     import quillContext.postgres.*
 
-    override def findByNoteIds(noteIds: Seq[Long]): Task[List[(NotePersonEntity, PersonEntity)]] = transaction {
-        run {
-            query[NotePersonEntity]
-                .join(query[PersonEntity]).on((np, p) => np.personId == p.id)
-                .filter { case (np, _) => liftQuery(noteIds).contains(np.noteId) }
-        }
+    override def findByNoteId(noteId: Long): Task[List[NotePersonEntity]] = transaction {
+        run(query[NotePersonEntity].filter(np => np.noteId == lift(noteId)))
     }
 
-    override def updateNotePersons(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
-        for {
-            noteIds <- ZIO.succeed(notePersonEntities.map(_.noteId))
+    override def findByNoteIdIn(noteIds: Seq[Long]): Task[List[NotePersonEntity]] = transaction {
+        run(query[NotePersonEntity].filter(np => liftQuery(noteIds).contains(np.noteId)))
+    }
 
-            newNotePersonEntities <- ZIO.succeed(notePersonEntities.map(np => (np.noteId, np.personId) -> np).toMap)
-            currentNotePersonEntities <- run(query[NotePersonEntity].filter(np => liftQuery(noteIds).contains(np.noteId)))
-                .map(_.map(np => (np.noteId, np.personId) -> np).toMap)
+    override def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
+        run(liftQuery(notePersonEntities).foreach(np => query[NotePersonEntity].insertValue(np))).unit
+    }
 
-            currentVsNew <- ZIO.succeed {
-                (currentNotePersonEntities.keySet ++ newNotePersonEntities.keySet).toList.map { key =>
-                    (currentNotePersonEntities.get(key), newNotePersonEntities.get(key))
-                }
+    override def update(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
+        run {
+            liftQuery(notePersonEntities).foreach { npU =>
+                query[NotePersonEntity]
+                    .filter(np => np.noteId == npU.noteId && np.personId == npU.personId)
+                    .updateValue(npU)
             }
+        }.unit
+    }
 
-            notePersonEntitiesToAdd <- ZIO.succeed {
-                currentVsNew.collect { case (None, Some(np)) => np }
+    override def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
+        run {
+            liftQuery(notePersonEntities).foreach { npD =>
+                query[NotePersonEntity]
+                    .filter(np => np.noteId == npD.noteId && np.personId == npD.personId)
+                    .delete
             }
-
-            notePersonEntitiesToRemove <- ZIO.succeed {
-                currentVsNew.collect { case (Some(np), None) => np }
-            }
-
-            notePersonEntitiesToUpdate <- ZIO.succeed {
-                currentVsNew.collect { case (Some(npC), Some(npN)) if npC != npN => npN }
-            }
-
-            _ <- run(liftQuery(notePersonEntitiesToAdd).foreach(np => query[NotePersonEntity].insertValue(np)))
-
-            _ <- run {
-                liftQuery(notePersonEntitiesToRemove).foreach { npR =>
-                    query[NotePersonEntity]
-                        .filter(np => np.noteId == npR.noteId && np.personId == npR.personId)
-                        .delete
-                }
-            }
-
-            _ <- run {
-                liftQuery(notePersonEntitiesToUpdate).foreach { npU =>
-                    query[NotePersonEntity]
-                        .filter(np => np.noteId == npU.noteId && np.personId == npU.personId)
-                        .updateValue(npU)
-                }
-            }
-        } yield ()
+        }.unit
     }
 }

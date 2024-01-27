@@ -12,20 +12,20 @@ case class PersonForm(
 object PersonForm {
     given JsonCodec[PersonForm] = DeriveJsonCodec.gen
 
-    def validateZIO(userForm: PersonForm): IO[ValidationException, Unit] =
-        validate(userForm).mapError(ValidationException.apply).toZIO
+    def validateZIO(personForm: PersonForm): IO[ValidationException, Unit] =
+        validate(personForm).mapError(ValidationException.apply).toZIO
 
-    private def validate(userForm: PersonForm): Validation[String, Unit] =
+    private def validate(personForm: PersonForm): Validation[String, Unit] =
         ZValidation.validateAll {
             Seq(
-                validateNameNotBlank(userForm),
-                validateNameNotToLong(userForm)
+                validateNameNotBlank(personForm),
+                validateNameNotToLong(personForm)
             )
         }.unit
 
-    private def validateNameNotBlank(userForm: PersonForm) =
-        ZValidation.fromPredicateWith("Title cannot be blank")(userForm)(userForm => !userForm.name.isBlank)
+    private def validateNameNotBlank(personForm: PersonForm) =
+        ZValidation.fromPredicateWith("Title cannot be blank")(personForm)(personForm => !personForm.name.isBlank)
 
-    private def validateNameNotToLong(userForm: PersonForm) =
-        ZValidation.fromPredicateWith("Title cannot be longer then 50 characters")(userForm)(userForm => userForm.name.length <= 50)
+    private def validateNameNotToLong(personForm: PersonForm) =
+        ZValidation.fromPredicateWith("Title cannot be longer then 50 characters")(personForm)(personForm => personForm.name.length <= 50)
 }

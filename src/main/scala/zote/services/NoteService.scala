@@ -3,10 +3,11 @@ package zote.services
 import com.softwaremill.quicklens.*
 import zio.*
 import zote.db.QuillContext
-import zote.db.model.{NoteEntity, NotePersonEntity}
-import zote.db.repositories.{NotePersonRepository, NoteRepository}
+import zote.db.model.NoteEntity
+import zote.db.repositories.NoteRepository
 import zote.dto.{Note, NoteForm}
 import zote.exceptions.NotFoundException
+import zote.utils.ZIOUtils.*
 
 trait NoteService {
     def getAll: Task[Seq[Note]]
@@ -26,7 +27,7 @@ object NoteService {
 
 case class NoteServiceImpl(
     private val noteRepository: NoteRepository,
-    private val noteUserRepository: NotePersonRepository,
+    private val notePersonService: NotePersonService,
     private val personService: PersonService,
     private val quillContext: QuillContext
 ) extends NoteService {
@@ -41,13 +42,11 @@ case class NoteServiceImpl(
         getEntityById(id).flatMap(toDto)
     }
 
-    override def create(noteForm: NoteForm): Task[Note] = upsert(noteForm) {
-        ZIO.succeed {
-            NoteEntity(title = noteForm.title, message = noteForm.message, status = noteForm.status)
-        }
+    override def create(noteForm: NoteForm): Task[Note] = validateAndUpsert(noteForm) {
+        NoteEntity(title = noteForm.title, message = noteForm.message, status = noteForm.status).asZIO
     }
 
-    override def update(id: Long, noteForm: NoteForm): Task[Note] = upsert(noteForm) {
+    override def update(id: Long, noteForm: NoteForm): Task[Note] = validateAndUpsert(noteForm) {
         getEntityById(id).map(_
             .modify(_.title).setTo(noteForm.title)
             .modify(_.message).setTo(noteForm.message)
@@ -55,20 +54,13 @@ case class NoteServiceImpl(
         )
     }
 
-    private def upsert(noteForm: NoteForm)(f: => Task[NoteEntity]): Task[Note] = transaction {
+    private def validateAndUpsert(noteForm: NoteForm)(f: => Task[NoteEntity]): Task[Note] = transaction {
         for {
             _ <- NoteForm.validateZIO(noteForm)
             _ <- personService.validatePersonsExist(noteForm.persons.map(_.personId))
             noteEntity <- f
             noteEntity <- noteRepository.upsert(noteEntity)
-            notePersonEntities <- ZIO.succeed(
-                noteForm.persons.map(person => NotePersonEntity(
-                    noteId = noteEntity.id,
-                    personId = person.personId,
-                    owner = person.owner
-                )).toList
-            )
-            _ <- noteUserRepository.updateNotePersons(notePersonEntities)
+            _ <- notePersonService.updateNotePersons(noteEntity.id, noteForm.persons.toSeq)
             note <- toDto(noteEntity)
         } yield note
     }
@@ -87,18 +79,16 @@ case class NoteServiceImpl(
     private def toDtos(noteEntities: Seq[NoteEntity]): Task[List[Note]] = {
         for {
             noteIds <- ZIO.succeed(noteEntities.map(_.id))
-            notePersonsByNoteIds <- personService.getNotePersonsByNoteIds(noteIds)
-            notes <- ZIO.succeed {
-                noteEntities.map { noteEntity =>
-                    Note(
-                        id = noteEntity.id,
-                        message = noteEntity.message,
-                        title = noteEntity.title,
-                        status = noteEntity.status,
-                        persons = notePersonsByNoteIds.getOrElse(noteEntity.id, List.empty)
-                    )
-                }.toList
-            }
+            notePersonsByNoteIds <- notePersonService.getNotePersonsByNoteIds(noteIds)
+            notes <- noteEntities.map { noteEntity =>
+                Note(
+                    id = noteEntity.id,
+                    message = noteEntity.message,
+                    title = noteEntity.title,
+                    status = noteEntity.status,
+                    persons = notePersonsByNoteIds.getOrElse(noteEntity.id, List.empty)
+                )
+            }.toList.asZIO
         } yield notes
     }
 

@@ -5,21 +5,22 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
 import zote.db.repositories.{NotePersonRepository, PersonRepository}
-import zote.dto.{NotePerson, Person, PersonForm}
+import zote.dto.{Person, PersonForm}
 import zote.exceptions.NotFoundException
+import zote.utils.ZIOUtils.*
 
 trait PersonService {
-    def getAll: Task[Seq[Person]]
+    def getAll: Task[List[Person]]
 
     def getById(id: Long): Task[Person]
+
+    def getByIdIn(ids: Seq[Long]): Task[List[Person]]
 
     def create(personForm: PersonForm): Task[Person]
 
     def update(id: Long, personForm: PersonForm): Task[Person]
 
     def delete(id: Long): Task[Unit]
-
-    def getNotePersonsByNoteIds(noteIds: Seq[Long]): Task[Map[Long, List[NotePerson]]]
 
     def validatePersonsExist(personIds: Set[Long]): Task[Unit]
 }
@@ -36,7 +37,7 @@ case class PersonServiceImpl(
 
     import quillContext.postgres.*
 
-    override def getAll: Task[Seq[Person]] = transaction {
+    override def getAll: Task[List[Person]] = transaction {
         personRepository.findAll.flatMap(toDtos)
     }
 
@@ -44,19 +45,21 @@ case class PersonServiceImpl(
         getEntityById(id).flatMap(toDto)
     }
 
-    override def create(personForm: PersonForm): Task[Person] = upsert(personForm) {
-        ZIO.succeed {
-            PersonEntity(name = personForm.name)
-        }
+    override def getByIdIn(ids: Seq[Long]): Task[List[Person]] = transaction {
+        personRepository.findByIdIn(ids).flatMap(toDtos)
     }
 
-    override def update(id: Long, personForm: PersonForm): Task[Person] = upsert(personForm) {
+    override def create(personForm: PersonForm): Task[Person] = validateAndUpsert(personForm) {
+        PersonEntity(name = personForm.name).asZIO
+    }
+
+    override def update(id: Long, personForm: PersonForm): Task[Person] = validateAndUpsert(personForm) {
         getEntityById(id).map(_
             .modify(_.name).setTo(personForm.name)
         )
     }
 
-    private def upsert(personForm: PersonForm)(f: => Task[PersonEntity]): Task[Person] = transaction {
+    private def validateAndUpsert(personForm: PersonForm)(f: => Task[PersonEntity]): Task[Person] = transaction {
         for {
             _ <- PersonForm.validateZIO(personForm)
             personEntity <- f
@@ -72,28 +75,10 @@ case class PersonServiceImpl(
         } yield ()
     }
 
-    override def getNotePersonsByNoteIds(noteIds: Seq[Long]): Task[Map[Long, List[NotePerson]]] = {
-        for {
-            personNoteEntitiesWithPersonEntities <- notePersonRepository.findByNoteIds(noteIds)
-            personEntities <- ZIO.succeed(personNoteEntitiesWithPersonEntities.map(_._2).distinct)
-            personById <- toDtos(personEntities).map(_.map(u => u.id -> u).toMap)
-            notePersonsByNoteIds <- ZIO.succeed {
-                personNoteEntitiesWithPersonEntities.groupMap { case (notePersonEntity, _) =>
-                    notePersonEntity.noteId
-                } { case (notePersonEntity, personEntity) =>
-                    NotePerson(
-                        person = personById(personEntity.id),
-                        owner = notePersonEntity.owner
-                    )
-                }
-            }
-        } yield notePersonsByNoteIds
-    }
-
     override def validatePersonsExist(personIds: Set[Long]): Task[Unit] = {
         for {
-            existingPersonIds <- personRepository.findExistingIds(personIds)
-            missingPersonIds <- ZIO.succeed(personIds -- existingPersonIds)
+            existingPersonIds <- personRepository.findByIdIn(personIds.toSeq).map(_.map(_.id))
+            missingPersonIds <- (personIds -- existingPersonIds).asZIO
             _ <- ZIO.unless(missingPersonIds.isEmpty) {
                 ZIO.fail(NotFoundException(s"Persons ids: ${missingPersonIds.mkString(", ")} not found"))
             }
@@ -105,14 +90,12 @@ case class PersonServiceImpl(
     }
 
     private def toDtos(personEntities: Seq[PersonEntity]): Task[List[Person]] = {
-        ZIO.succeed {
-            personEntities.map { personEntity =>
-                Person(
-                    id = personEntity.id,
-                    name = personEntity.name,
-                )
-            }.toList
-        }
+        personEntities.map { personEntity =>
+            Person(
+                id = personEntity.id,
+                name = personEntity.name,
+            )
+        }.toList.asZIO
     }
 
     private def toDto(personEntity: PersonEntity): Task[Person] = {

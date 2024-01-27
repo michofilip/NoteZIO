@@ -13,7 +13,7 @@ case class NoteController(
     private val noteService: NoteService
 ) extends Controller {
 
-    private val noteEndpoint = endpoint.tag("notes")
+    private val noteEndpoint = baseEndpoint.tag("notes")
 
     private val getAllEndpoint = noteEndpoint
         .name("getAll")
@@ -21,7 +21,6 @@ case class NoteController(
         .get
         .in("notes")
         .out(jsonBody[Seq[Note]])
-        .errorOut(getErrorOut)
 
     private val getByIdEndpoint = noteEndpoint
         .name("getById")
@@ -29,7 +28,6 @@ case class NoteController(
         .get
         .in("notes" / path[Long]("id"))
         .out(jsonBody[Note])
-        .errorOut(getErrorOut)
 
     private val createEndpoint = noteEndpoint
         .name("create")
@@ -38,7 +36,6 @@ case class NoteController(
         .in("notes")
         .in(jsonBody[NoteForm])
         .out(jsonBody[Note])
-        .errorOut(getErrorOut)
 
     private val updateEndpoint = noteEndpoint
         .name("update")
@@ -47,7 +44,6 @@ case class NoteController(
         .in("notes" / path[Long]("id"))
         .in(jsonBody[NoteForm])
         .out(jsonBody[Note])
-        .errorOut(getErrorOut)
 
     private val deleteEndpoint = noteEndpoint
         .name("delete")
@@ -55,7 +51,6 @@ case class NoteController(
         .delete
         .in("notes" / path[Long]("id"))
         .out(emptyOutput)
-        .errorOut(getErrorOut)
 
     private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
         noteService.getAll

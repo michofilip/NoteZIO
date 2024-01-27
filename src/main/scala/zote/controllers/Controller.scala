@@ -11,7 +11,9 @@ trait Controller {
     val endpoints: List[AnyEndpoint]
     val routes: List[ServerEndpoint[Any, Task]]
 
-    protected val getErrorOut = oneOf[Throwable](
+    protected val baseEndpoint = endpoint.errorOut(getErrorOut)
+
+    private def getErrorOut = oneOf[Throwable](
         oneOfVariant(statusCode(StatusCode.NotFound).and(stringBody.mapTo[NotFoundException])),
         oneOfVariant(statusCode(StatusCode.UnprocessableEntity).and(stringBody.mapTo[ValidationException])),
         oneOfDefaultVariant(

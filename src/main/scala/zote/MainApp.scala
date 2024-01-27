@@ -33,6 +33,7 @@ object MainApp extends ZIOAppDefault {
 
         NoteService.layer,
         PersonService.layer,
+        NotePersonService.layer,
 
         NoteRepository.layer,
         PersonRepository.layer,
