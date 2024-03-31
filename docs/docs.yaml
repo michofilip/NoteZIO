@@ -1,0 +1,515 @@
+openapi: 3.1.0
+info:
+  title: Zote
+  version: 0.1.0-SNAPSHOT
+paths:
+  /health:
+    get:
+      description: health
+      operationId: health
+      responses:
+        '200':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /notes:
+    get:
+      tags:
+      - notes
+      description: getAll
+      operationId: getAll
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Note'
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    post:
+      tags:
+      - notes
+      description: create
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /notes/{id}:
+    get:
+      tags:
+      - notes
+      description: getById
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '400':
+          description: 'Invalid value for: path parameter id'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    put:
+      tags:
+      - notes
+      description: update
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Note'
+        '400':
+          description: 'Invalid value for: path parameter id, Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    delete:
+      tags:
+      - notes
+      description: delete
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: path parameter id'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /persons:
+    get:
+      tags:
+      - persons
+      description: getAll
+      operationId: getAll
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Person'
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    post:
+      tags:
+      - persons
+      description: create
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /persons/{id}:
+    get:
+      tags:
+      - persons
+      description: getById
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: 'Invalid value for: path parameter id'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    put:
+      tags:
+      - persons
+      description: update
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          description: 'Invalid value for: path parameter id, Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    delete:
+      tags:
+      - persons
+      description: delete
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: path parameter id'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    Note:
+      required:
+      - id
+      - message
+      - title
+      - status
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        message:
+          type: string
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotePerson'
+    NoteForm:
+      required:
+      - title
+      - message
+      - status
+      type: object
+      properties:
+        title:
+          type: string
+        message:
+          type: string
+        status:
+          $ref: '#/components/schemas/Status'
+        persons:
+          type: array
+          items:
+            $ref: '#/components/schemas/NotePersonId'
+    NotePerson:
+      required:
+      - person
+      - owner
+      type: object
+      properties:
+        person:
+          $ref: '#/components/schemas/Person'
+        owner:
+          type: boolean
+    NotePersonId:
+      required:
+      - personId
+      - owner
+      type: object
+      properties:
+        personId:
+          type: integer
+          format: int64
+        owner:
+          type: boolean
+    Person:
+      required:
+      - id
+      - name
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+    PersonForm:
+      required:
+      - name
+      type: object
+      properties:
+        name:
+          type: string
+    Status:
+      type: string
+      enum:
+      - Complete
+      - Draft
+      - Ongoing

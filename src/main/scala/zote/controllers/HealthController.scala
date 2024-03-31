@@ -6,7 +6,9 @@ import sttp.tapir.ztapir.*
 import zio.*
 
 case class HealthController() extends Controller {
-    private val healthEndpoint = endpoint
+    override protected val tag: String = "health"
+    
+    private val healthEndpoint = baseEndpoint
         .name("health")
         .description("health")
         .get

@@ -1,6 +1,7 @@
 package zote.enums
 
 import io.getquill.MappedEncoding
+import sttp.tapir.Schema
 import zio.json.{JsonDecoder, JsonEncoder}
 
 enum Status {
@@ -18,4 +19,6 @@ object Status {
     given MappedEncoding[Status, String] = MappedEncoding(_.toString)
 
     given MappedEncoding[String, Status] = MappedEncoding(Status.valueOf)
+
+    given Schema[Status] = Schema.derivedEnumeration.defaultStringBased
 }

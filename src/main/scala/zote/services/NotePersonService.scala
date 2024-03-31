@@ -4,6 +4,7 @@ import zio.*
 import zote.db.model.NotePersonEntity
 import zote.db.repositories.NotePersonRepository
 import zote.dto.{NotePerson, NotePersonId}
+import zote.exceptions.NotFoundException
 import zote.utils.ZIOUtils.*
 
 trait NotePersonService {
@@ -51,12 +52,14 @@ case class NotePersonServiceImpl(
             personById <- personNoteEntities.map(_.personId).distinct.asZIO
                 .flatMap(personService.getByIdIn)
                 .toMap(_.id)
-            notePersonsByNoteIds <- personNoteEntities.groupMap(_.noteId) { notePersonEntity =>
-                NotePerson(
-                    person = personById(notePersonEntity.personId),
-                    owner = notePersonEntity.owner
-                )
-            }.asZIO
+            notePersonsByNoteIds <- ZIO.attempt {
+                personNoteEntities.groupMap(_.noteId) { case NotePersonEntity(_, personId, owner) =>
+                    NotePerson(
+                        person = personById.getOrElse(personId, throw NotFoundException(s"Person id $personId not found")),
+                        owner = owner
+                    )
+                }
+            }
         } yield notePersonsByNoteIds
     }
 }

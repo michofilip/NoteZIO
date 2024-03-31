@@ -78,7 +78,7 @@ case class NoteServiceImpl(
 
     private def toDtos(noteEntities: Seq[NoteEntity]): Task[List[Note]] = {
         for {
-            noteIds <- ZIO.succeed(noteEntities.map(_.id))
+            noteIds <- noteEntities.map(_.id).asZIO
             notePersonsByNoteIds <- notePersonService.getNotePersonsByNoteIds(noteIds)
             notes <- noteEntities.map { noteEntity =>
                 Note(

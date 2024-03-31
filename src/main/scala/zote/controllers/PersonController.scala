@@ -12,24 +12,23 @@ import zote.services.PersonService
 class PersonController(
     private val personService: PersonService
 ) extends Controller {
+    override protected val tag: String = "persons"
 
-    private val personEndpoint = baseEndpoint.tag("persons")
-
-    private val getAllEndpoint = personEndpoint
+    private val getAllEndpoint = baseEndpoint
         .name("getAll")
         .description("getAll")
         .get
         .in("persons")
         .out(jsonBody[Seq[Person]])
 
-    private val getByIdEndpoint = personEndpoint
+    private val getByIdEndpoint = baseEndpoint
         .name("getById")
         .description("getById")
         .get
         .in("persons" / path[Long]("id"))
         .out(jsonBody[Person])
 
-    private val createEndpoint = personEndpoint
+    private val createEndpoint = baseEndpoint
         .name("create")
         .description("create")
         .post
@@ -37,7 +36,7 @@ class PersonController(
         .in(jsonBody[PersonForm])
         .out(jsonBody[Person])
 
-    private val updateEndpoint = personEndpoint
+    private val updateEndpoint = baseEndpoint
         .name("update")
         .description("update")
         .put
@@ -45,7 +44,7 @@ class PersonController(
         .in(jsonBody[PersonForm])
         .out(jsonBody[Person])
 
-    private val deleteEndpoint = personEndpoint
+    private val deleteEndpoint = baseEndpoint
         .name("delete")
         .description("delete")
         .delete

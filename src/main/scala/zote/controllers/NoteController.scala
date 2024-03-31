@@ -12,24 +12,23 @@ import zote.services.NoteService
 case class NoteController(
     private val noteService: NoteService
 ) extends Controller {
+    override protected val tag: String = "notes"
 
-    private val noteEndpoint = baseEndpoint.tag("notes")
-
-    private val getAllEndpoint = noteEndpoint
+    private val getAllEndpoint = baseEndpoint
         .name("getAll")
         .description("getAll")
         .get
         .in("notes")
         .out(jsonBody[Seq[Note]])
 
-    private val getByIdEndpoint = noteEndpoint
+    private val getByIdEndpoint = baseEndpoint
         .name("getById")
         .description("getById")
         .get
         .in("notes" / path[Long]("id"))
         .out(jsonBody[Note])
 
-    private val createEndpoint = noteEndpoint
+    private val createEndpoint = baseEndpoint
         .name("create")
         .description("create")
         .post
@@ -37,7 +36,7 @@ case class NoteController(
         .in(jsonBody[NoteForm])
         .out(jsonBody[Note])
 
-    private val updateEndpoint = noteEndpoint
+    private val updateEndpoint = baseEndpoint
         .name("update")
         .description("update")
         .put
@@ -45,7 +44,7 @@ case class NoteController(
         .in(jsonBody[NoteForm])
         .out(jsonBody[Note])
 
-    private val deleteEndpoint = noteEndpoint
+    private val deleteEndpoint = baseEndpoint
         .name("delete")
         .description("delete")
         .delete

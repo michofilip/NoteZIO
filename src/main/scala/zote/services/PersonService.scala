@@ -79,9 +79,7 @@ case class PersonServiceImpl(
         for {
             existingPersonIds <- personRepository.findByIdIn(personIds.toSeq).map(_.map(_.id))
             missingPersonIds <- (personIds -- existingPersonIds).asZIO
-            _ <- ZIO.unless(missingPersonIds.isEmpty) {
-                ZIO.fail(NotFoundException(s"Persons ids: ${missingPersonIds.mkString(", ")} not found"))
-            }
+            _ <- ZIO.fail(NotFoundException(s"Persons ids: ${missingPersonIds.mkString(", ")} not found")).unless(missingPersonIds.isEmpty)
         } yield ()
     }
 
