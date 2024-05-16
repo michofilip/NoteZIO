@@ -11,40 +11,46 @@ import zote.services.*
 
 object MainApp extends ZIOAppDefault {
 
-    private val app = for {
-        _ <- ZIO.logInfo("Welcome to Zote")
+  private val app = for {
+    _ <- FlywayService.run
 
-        routes <- HttpApi.routesZIO
-        swaggerRoutes <- SwaggerApi.routesZIO
-        port <- Server.install(
-            ZioHttpInterpreter(
-                ZioHttpServerOptions.default
-            ).toHttp(routes ++ swaggerRoutes)
-        )
-        _ <- ZIO.logInfo(s"Server started at port: $port")
+    _ <- ZIO.logInfo("Welcome to Zote")
 
-        _ <- ZIO.never
-    } yield ()
+    routes <- HttpApi.routesZIO
+    swaggerRoutes <- SwaggerApi.routesZIO
+    port <- Server.install(
+      ZioHttpInterpreter(
+        ZioHttpServerOptions.default
+      ).toHttp(routes ++ swaggerRoutes)
+    )
+    _ <- ZIO.logInfo(s"Server started at port: $port")
 
-    def run = app.provide(
-        HealthController.layer,
-        NoteController.layer,
-        PersonController.layer,
+    _ <- ZIO.never
+  } yield ()
 
-        NoteService.layer,
-        PersonService.layer,
-        NotePersonService.layer,
+  def run = app.provide(
+    HealthController.layer,
+    NoteController.layer,
+    PersonController.layer,
 
-        NoteRepository.layer,
-        PersonRepository.layer,
-        NotePersonRepository.layer,
+    NoteService.layer,
+    LabelService.layer,
+    PersonService.layer,
+    FlywayService.layer,
 
-        QuillContext.layer,
+    NoteRepository.layer,
+    LabelRepository.layer,
+    PersonRepository.layer,
+    NotePersonRepository.layer,
+    NoteLabelRepository.layer,
 
-        ServerConfig.layer,
-        SLF4JConfig.layer,
-        DbConfig.layer,
+    QuillContext.layer,
 
-        ZLayer.Debug.mermaid
-    ).exitCode
+    ServerConfig.layer,
+    SLF4JConfig.layer,
+    FlywayConfig.layer,
+    DbConfig.layer,
+
+    ZLayer.Debug.mermaid
+  ).exitCode
 }

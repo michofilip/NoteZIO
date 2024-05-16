@@ -1,17 +1,17 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.4.0"
+ThisBuild / scalaVersion := "3.4.1"
 
-val zioVersion = "2.0.21"
+val zioVersion = "2.1.1"
 val zioJsonVersion = "0.6.2"
-val zioConfigVersion = "4.0.1"
-val zioLoggingVersion = "2.2.0"
-val slf4jVersion = "2.0.11"
-val quillVersion = "4.8.1"
-val postgresqlVersion = "42.7.1"
-val flywayVersion = "10.6.0"
+val zioConfigVersion = "4.0.2"
+val zioLoggingVersion = "2.2.3"
+val slf4jVersion = "2.0.13"
+val quillVersion = "4.8.4"
+val postgresqlVersion = "42.7.3"
+val flywayVersion = "10.12.0"
 val quicklensVersion = "1.9.7"
-val tapirVersion = "1.9.8"
+val tapirVersion = "1.10.7"
 
 lazy val root = (project in file("."))
     .settings(

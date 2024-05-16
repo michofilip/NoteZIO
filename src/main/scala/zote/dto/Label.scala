@@ -2,7 +2,7 @@ package zote.dto
 
 import zio.json.JsonCodec
 
-case class Person(
+case class Label(
   id: Long,
   name: String
 )derives JsonCodec

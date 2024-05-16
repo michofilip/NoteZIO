@@ -1,12 +1,8 @@
 package zote.dto
 
-import zio.json.{DeriveJsonCodec, JsonCodec}
+import zio.json.JsonCodec
 
 case class NotePerson(
-    person: Person,
-    owner: Boolean
-)
-
-object NotePerson {
-    given JsonCodec[NotePerson] = DeriveJsonCodec.gen
-}
+  person: Person,
+  owner: Boolean
+)derives JsonCodec

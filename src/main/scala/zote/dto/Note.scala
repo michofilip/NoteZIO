@@ -1,16 +1,12 @@
 package zote.dto
 
-import zio.json.{DeriveJsonCodec, JsonCodec}
-import zote.enums.Status
+import zio.json.JsonCodec
+import zote.enums.NoteStatus
 
 case class Note(
-    id: Long,
-    message: String,
-    title: String,
-    status: Status,
-    persons: List[NotePerson]
-)
-
-object Note {
-    given JsonCodec[Note] = DeriveJsonCodec.gen
-}
+  header: NoteHeader,
+  message: String,
+  assignees: Option[List[NotePerson]],
+  parentNote: Option[NoteHeader],
+  childrenNotes: Option[List[NoteHeader]],
+)derives JsonCodec
