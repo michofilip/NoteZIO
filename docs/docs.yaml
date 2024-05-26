@@ -5,10 +5,30 @@ info:
 paths:
   /health:
     get:
+      tags:
+      - health
       description: health
       operationId: health
       responses:
         '200':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
           description: ''
           content:
             text/plain:
@@ -28,7 +48,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Note'
+                  $ref: '#/components/schemas/NoteHeader'
         '404':
           description: ''
           content:
@@ -401,9 +421,134 @@ paths:
         schema:
           type: integer
           format: int64
+      - name: force
+        in: query
+        required: false
+        schema:
+          type: boolean
       responses:
         '200':
           description: ''
+        '400':
+          description: 'Invalid value for: path parameter id, Invalid value for: query
+            parameter force'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /label:
+    get:
+      tags:
+      - label
+      description: getAll
+      operationId: getAll
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Label'
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    post:
+      tags:
+      - label
+      description: create
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+        '400':
+          description: 'Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+  /label/{id}:
+    get:
+      tags:
+      - label
+      description: getById
+      operationId: getById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
         '400':
           description: 'Invalid value for: path parameter id'
           content:
@@ -428,72 +573,226 @@ paths:
             text/plain:
               schema:
                 type: string
+    put:
+      tags:
+      - label
+      description: update
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LabelForm'
+        required: true
+      responses:
+        '200':
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Label'
+        '400':
+          description: 'Invalid value for: path parameter id, Invalid value for: body'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+    delete:
+      tags:
+      - label
+      description: delete
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: force
+        in: query
+        required: false
+        schema:
+          type: boolean
+      responses:
+        '200':
+          description: ''
+        '400':
+          description: 'Invalid value for: path parameter id, Invalid value for: query
+            parameter force'
+          content:
+            text/plain:
+              schema:
+                type: string
+        '404':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '422':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
+        '500':
+          description: ''
+          content:
+            text/plain:
+              schema:
+                type: string
 components:
   schemas:
-    Note:
+    Label:
+      title: Label
+      type: object
       required:
       - id
-      - message
-      - title
-      - status
-      type: object
+      - name
       properties:
         id:
           type: integer
           format: int64
+        name:
+          type: string
+    LabelForm:
+      title: LabelForm
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+    Note:
+      title: Note
+      type: object
+      required:
+      - header
+      - message
+      properties:
+        header:
+          $ref: '#/components/schemas/NoteHeader'
         message:
           type: string
-        title:
-          type: string
-        status:
-          $ref: '#/components/schemas/Status'
-        persons:
+        assignees:
           type: array
           items:
             $ref: '#/components/schemas/NotePerson'
+        parentNote:
+          $ref: '#/components/schemas/NoteHeader'
+        childrenNotes:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoteHeader'
     NoteForm:
+      title: NoteForm
+      type: object
       required:
       - title
       - message
       - status
-      type: object
       properties:
         title:
           type: string
         message:
           type: string
         status:
-          $ref: '#/components/schemas/Status'
-        persons:
+          $ref: '#/components/schemas/NoteStatus'
+        assignees:
+          type: array
+          uniqueItems: true
+          items:
+            $ref: '#/components/schemas/NotePersonForm'
+        parentId:
+          type: integer
+          format: int64
+        labels:
+          type: array
+          uniqueItems: true
+          items:
+            type: integer
+            format: int64
+    NoteHeader:
+      title: NoteHeader
+      type: object
+      required:
+      - id
+      - title
+      - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        title:
+          type: string
+        status:
+          $ref: '#/components/schemas/NoteStatus'
+        labels:
           type: array
           items:
-            $ref: '#/components/schemas/NotePersonId'
+            $ref: '#/components/schemas/Label'
     NotePerson:
+      title: NotePerson
+      type: object
       required:
       - person
       - owner
-      type: object
       properties:
         person:
           $ref: '#/components/schemas/Person'
         owner:
           type: boolean
-    NotePersonId:
+    NotePersonForm:
+      title: NotePersonForm
+      type: object
       required:
       - personId
       - owner
-      type: object
       properties:
         personId:
           type: integer
           format: int64
         owner:
           type: boolean
+    NoteStatus:
+      title: NoteStatus
+      type: string
+      enum:
+      - Complete
+      - Draft
+      - Ongoing
     Person:
+      title: Person
+      type: object
       required:
       - id
       - name
-      type: object
       properties:
         id:
           type: integer
@@ -501,15 +800,10 @@ components:
         name:
           type: string
     PersonForm:
+      title: PersonForm
+      type: object
       required:
       - name
-      type: object
       properties:
         name:
           type: string
-    Status:
-      type: string
-      enum:
-      - Complete
-      - Draft
-      - Ongoing

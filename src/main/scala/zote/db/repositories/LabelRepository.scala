@@ -5,13 +5,15 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.LabelEntity
 import zote.exceptions.NotFoundException
+import zote.utils.Utils
 
 trait LabelRepository {
   def findAll: Task[List[LabelEntity]]
 
   def findById(id: Long): Task[Option[LabelEntity]]
 
-  final def getById(id: Long): Task[LabelEntity] = findById(id).someOrFail(NotFoundException(s"Label id: $id not found"))
+  final def getById(id: Long): Task[LabelEntity] =
+    findById(id).someOrFail(NotFoundException(s"Label id: $id not found"))
 
   def upsert(labelEntity: LabelEntity): Task[LabelEntity]
 
@@ -23,10 +25,10 @@ object LabelRepository {
 }
 
 case class LabelRepositoryImpl(
-  private val quillContext: QuillContext
+    private val quillContext: QuillContext
 ) extends LabelRepository {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def findAll: Task[List[LabelEntity]] = {
     run(query[LabelEntity])
@@ -46,14 +48,22 @@ case class LabelRepositoryImpl(
   }
 
   override def delete(id: Long): Task[LabelEntity] = {
-    run(query[LabelEntity].filter(l => l.id == lift(id)).delete.returning(l => l))
+    run(
+      query[LabelEntity]
+        .filter(l => l.id == lift(id))
+        .delete
+        .returning(Utils.identity)
+    )
   }
 
   private inline def insert = quote { (labelEntity: LabelEntity) =>
-    query[LabelEntity].insertValue(labelEntity).returning(l => l)
+    query[LabelEntity].insertValue(labelEntity).returning(Utils.identity)
   }
 
   private inline def update = quote { (labelEntity: LabelEntity) =>
-    query[LabelEntity].filter(l => l.id == labelEntity.id).updateValue(labelEntity).returning(l => l)
+    query[LabelEntity]
+      .filter(l => l.id == labelEntity.id)
+      .updateValue(labelEntity)
+      .returning(Utils.identity)
   }
 }

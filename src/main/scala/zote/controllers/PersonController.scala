@@ -19,7 +19,7 @@ class PersonController(
     .description("getAll")
     .get
     .in("persons")
-    .out(jsonBody[Seq[Person]])
+    .out(jsonBody[List[Person]])
 
   private val getByIdEndpoint = baseEndpoint
     .name("getById")
@@ -49,6 +49,7 @@ class PersonController(
     .description("delete")
     .delete
     .in("persons" / path[Long]("id"))
+    .in(query[Option[Boolean]]("force"))
     .out(emptyOutput)
 
   private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
@@ -63,13 +64,12 @@ class PersonController(
     personService.create(personsForm)
   }
 
-  private val update = updateEndpoint.zServerLogic[Any] { case (id, personsForm) =>
+  private val update = updateEndpoint.zServerLogic[Any] { (id, personsForm) =>
     personService.update(id, personsForm)
   }
 
-  private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    //    TODO fix it
-    personService.delete(id, false)
+  private val delete = deleteEndpoint.zServerLogic[Any] { (id, force) =>
+    personService.delete(id, force.getOrElse(false))
   }
 
   override val endpoints: List[AnyEndpoint] = List(

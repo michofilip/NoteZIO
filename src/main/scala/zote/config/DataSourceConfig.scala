@@ -2,7 +2,6 @@ package zote.config
 
 import io.getquill.jdbczio.Quill
 
-object DbConfig {
+object DataSourceConfig {
   lazy val layer = Quill.DataSource.fromPrefix("db")
 }
-

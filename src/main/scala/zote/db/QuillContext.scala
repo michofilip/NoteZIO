@@ -4,8 +4,11 @@ import io.getquill.SnakeCase
 import io.getquill.jdbczio.Quill
 import zio.ZLayer
 
-case class QuillContext(postgres: Quill.Postgres[SnakeCase])
+import javax.sql.DataSource
+
+case class QuillContext(override val ds: DataSource)
+    extends Quill.Postgres(SnakeCase, ds)
 
 object QuillContext {
-  lazy val layer = Quill.Postgres.fromNamingStrategy(SnakeCase) >>> ZLayer.derive[QuillContext]
+  lazy val layer = ZLayer.derive[QuillContext]
 }

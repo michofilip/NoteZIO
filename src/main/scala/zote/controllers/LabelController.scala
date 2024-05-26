@@ -6,69 +6,70 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import sttp.tapir.{AnyEndpoint, path}
 import zio.*
-import zote.dto.{Note, NoteForm, NoteHeader}
-import zote.services.NoteService
+import zote.dto.{Label, LabelForm, Person, PersonForm}
+import zote.services.{LabelService, PersonService}
 
-case class NoteController(
-  private val noteService: NoteService
+class LabelController(
+  private val labelService: LabelService,
 ) extends Controller {
-  override protected val tag: String = "notes"
+  override protected val tag: String = "label"
 
   private val getAllEndpoint = baseEndpoint
     .name("getAll")
     .description("getAll")
     .get
-    .in("notes")
-    .out(jsonBody[List[NoteHeader]])
+    .in("label")
+    .out(jsonBody[List[Label]])
 
   private val getByIdEndpoint = baseEndpoint
     .name("getById")
     .description("getById")
     .get
-    .in("notes" / path[Long]("id"))
-    .out(jsonBody[Note])
+    .in("label" / path[Long]("id"))
+    .out(jsonBody[Label])
 
   private val createEndpoint = baseEndpoint
     .name("create")
     .description("create")
     .post
-    .in("notes")
-    .in(jsonBody[NoteForm])
-    .out(jsonBody[Note])
+    .in("label")
+    .in(jsonBody[LabelForm])
+    .out(jsonBody[Label])
 
   private val updateEndpoint = baseEndpoint
     .name("update")
     .description("update")
     .put
-    .in("notes" / path[Long]("id"))
-    .in(jsonBody[NoteForm])
-    .out(jsonBody[Note])
+    .in("label" / path[Long]("id"))
+    .in(jsonBody[LabelForm])
+    .out(jsonBody[Label])
 
   private val deleteEndpoint = baseEndpoint
     .name("delete")
     .description("delete")
     .delete
-    .in("notes" / path[Long]("id"))
+    .in("label" / path[Long]("id"))
+    .in(query[Option[Boolean]]("force"))
     .out(emptyOutput)
 
   private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
-    noteService.getAll
+    labelService.getAll
   }
 
   private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-    noteService.getById(id)
+    labelService.getById(id)
   }
 
-  private val create = createEndpoint.zServerLogic[Any] { noteForm =>
-    noteService.create(noteForm)
+  private val create = createEndpoint.zServerLogic[Any] { labelForm =>
+    labelService.create(labelForm)
   }
 
-  private val update = updateEndpoint.zServerLogic[Any] { case (id, noteForm) =>
-    noteService.update(id, noteForm)
+  private val update = updateEndpoint.zServerLogic[Any] { (id, labelForm) =>
+    labelService.update(id, labelForm)
   }
 
-  private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    noteService.delete(id)
+  private val delete = deleteEndpoint.zServerLogic[Any] { (id, force) =>
+    labelService.delete(id, force.getOrElse(false))
   }
 
   override val endpoints: List[AnyEndpoint] = List(
@@ -87,6 +88,6 @@ case class NoteController(
   )
 }
 
-object NoteController {
-  lazy val layer = ZLayer.derive[NoteController]
+object LabelController {
+  lazy val layer = ZLayer.derive[LabelController]
 }

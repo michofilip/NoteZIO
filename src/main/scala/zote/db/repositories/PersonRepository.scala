@@ -5,6 +5,7 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
 import zote.exceptions.NotFoundException
+import zote.utils.Utils
 
 trait PersonRepository {
   def findAll: Task[List[PersonEntity]]
@@ -26,7 +27,7 @@ case class PersonRepositoryImpl(
   private val quillContext: QuillContext
 ) extends PersonRepository {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def findAll: Task[List[PersonEntity]] = {
     run(query[PersonEntity])
@@ -46,14 +47,14 @@ case class PersonRepositoryImpl(
   }
 
   override def delete(id: Long): Task[PersonEntity] = {
-    run(query[PersonEntity].filter(p => p.id == lift(id)).delete.returning(p => p))
+    run(query[PersonEntity].filter(p => p.id == lift(id)).delete.returning(Utils.identity))
   }
 
   private inline def insert = quote { (personEntity: PersonEntity) =>
-    query[PersonEntity].insertValue(personEntity).returning(p => p)
+    query[PersonEntity].insertValue(personEntity).returning(Utils.identity)
   }
 
   private inline def update = quote { (personEntity: PersonEntity) =>
-    query[PersonEntity].filter(p => p.id == personEntity.id).updateValue(personEntity).returning(p => p)
+    query[PersonEntity].filter(p => p.id == personEntity.id).updateValue(personEntity).returning(Utils.identity)
   }
 }

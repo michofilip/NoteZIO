@@ -5,6 +5,7 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.NoteEntity
 import zote.exceptions.NotFoundException
+import zote.utils.Utils
 
 trait NoteRepository {
   def findAll: Task[List[NoteEntity]]
@@ -28,7 +29,7 @@ case class NoteRepositoryImpl(
   private val quillContext: QuillContext
 ) extends NoteRepository {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def findAll: Task[List[NoteEntity]] = {
     run(query[NoteEntity])
@@ -53,14 +54,14 @@ case class NoteRepositoryImpl(
   }
 
   override def delete(id: Long): Task[NoteEntity] = {
-    run(query[NoteEntity].filter(i => i.id == lift(id)).delete.returning(n => n))
+    run(query[NoteEntity].filter(i => i.id == lift(id)).delete.returning(Utils.identity))
   }
 
   private inline def insert = quote { (noteEntity: NoteEntity) =>
-    query[NoteEntity].insertValue(noteEntity).returning(n => n)
+    query[NoteEntity].insertValue(noteEntity).returning(Utils.identity)
   }
 
   private inline def update = quote { (noteEntity: NoteEntity) =>
-    query[NoteEntity].filter(i => i.id == noteEntity.id).updateValue(noteEntity).returning(n => n)
+    query[NoteEntity].filter(i => i.id == noteEntity.id).updateValue(noteEntity).returning(Utils.identity)
   }
 }

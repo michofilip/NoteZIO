@@ -34,7 +34,7 @@ case class NoteServiceImpl(
   private val quillContext: QuillContext
 ) extends NoteService {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def getAll: Task[List[NoteHeader]] = transaction {
     noteRepository.findAll.flatMap { noteEntities =>
@@ -47,12 +47,8 @@ case class NoteServiceImpl(
   }
 
   override def create(noteForm: NoteForm): Task[Note] = transaction {
-    for {
-      _ <- NoteForm.validateZIO(noteForm)
-      _ <- ZIO.foreachDiscard(noteForm.parentId)(noteRepository.getById)
-      _ <- ZIO.foreachParDiscard(noteForm.assignees.map(_.personId))(personRepository.getById)
-      _ <- ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)
-      noteEntity <- noteRepository.upsert {
+    extension (noteForm: NoteForm) {
+      private def toEntity: NoteEntity = {
         NoteEntity(
           title = noteForm.title,
           message = noteForm.message,
@@ -60,35 +56,45 @@ case class NoteServiceImpl(
           parentId = noteForm.parentId,
         )
       }
+    }
 
-      updateNotePersonsFiber <- updateNotePersons(noteEntity.id, noteForm.assignees.toSeq).fork
-      updateNoteLabelsFiber <- updateNoteLabels(noteEntity.id, noteForm.labels.toSeq).fork
-      _ <- updateNotePersonsFiber.join
-      _ <- updateNoteLabelsFiber.join
+    for {
+      _ <- validateNote(noteForm)
+
+      noteEntity <- noteRepository.upsert(noteForm.toEntity)
+
+      _ <- updateDependencies(
+        noteId = noteEntity.id,
+        assignees = noteForm.assignees.toSeq,
+        labelIds = noteForm.labels.toSeq,
+      )
 
       note <- toNote(noteEntity)
     } yield note
   }
 
   override def update(id: Long, noteForm: NoteForm): Task[Note] = transaction {
-    for {
-      _ <- NoteForm.validateZIO(noteForm)
-      _ <- ZIO.foreachDiscard(noteForm.parentId)(noteRepository.getById)
-      _ <- ZIO.foreachParDiscard(noteForm.assignees.map(_.personId))(personRepository.getById)
-      _ <- ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)
-      noteEntity <- noteRepository.getById(id)
-      noteEntity <- noteRepository.upsert {
+    extension (noteEntity: NoteEntity) {
+      private def update(noteForm: NoteForm): NoteEntity = {
         noteEntity
           .modify(_.title).setTo(noteForm.title)
           .modify(_.message).setTo(noteForm.message)
           .modify(_.status).setTo(noteForm.status)
           .modify(_.parentId).setTo(noteForm.parentId)
       }
+    }
 
-      updateNotePersonsFiber <- updateNotePersons(noteEntity.id, noteForm.assignees.toSeq).fork
-      updateNoteLabelsFiber <- updateNoteLabels(noteEntity.id, noteForm.labels.toSeq).fork
-      _ <- updateNotePersonsFiber.join
-      _ <- updateNoteLabelsFiber.join
+    for {
+      _ <- validateNote(noteForm)
+
+      noteEntity <- noteRepository.getById(id)
+      noteEntity <- noteRepository.upsert(noteEntity.update(noteForm))
+
+      _ <- updateDependencies(
+        noteId = noteEntity.id,
+        assignees = noteForm.assignees.toSeq,
+        labelIds = noteForm.labels.toSeq,
+      )
 
       note <- toNote(noteEntity)
     } yield note
@@ -97,21 +103,35 @@ case class NoteServiceImpl(
   override def delete(id: Long): Task[Unit] = transaction {
     for {
       _ <- noteRepository.getById(id)
-
-      updateNotePersonsFiber <- updateNotePersons(id, Seq.empty).fork
-      updateNoteLabelsFiber <- updateNoteLabels(id, Seq.empty).fork
-      _ <- updateNotePersonsFiber.join
-      _ <- updateNoteLabelsFiber.join
-
+      _ <- deleteDependencies(id)
       _ <- noteRepository.delete(id)
     } yield ()
   }
 
-  private def updateNotePersons(noteId: Long, notePersonIds: Seq[NotePersonForm]) = {
+  private def validateNote(noteForm: NoteForm) = {
+    NoteForm.validateZIO(noteForm)
+      <&> ZIO.foreachDiscard(noteForm.parentId)(noteRepository.getById)
+      <&> ZIO.foreachParDiscard(noteForm.assignees.map(_.personId))(personRepository.getById)
+      <&> ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)
+  }
+
+  private def deleteDependencies(noteId: Long) = {
+    updateDependencies(noteId, Seq.empty, Seq.empty)
+  }
+
+  private def updateDependencies(
+    noteId: Long,
+    assignees: Seq[NotePersonForm],
+    labelIds: Seq[Long]
+  ) = {
+    updateNotePersons(noteId, assignees) <&> updateNoteLabels(noteId, labelIds)
+  }
+
+  private def updateNotePersons(noteId: Long, notePersons: Seq[NotePersonForm]) = {
     for {
       currentNotePersonEntities <- notePersonRepository.findAllByNoteId(noteId)
         .map(_.map(np => np.personId -> np).toMap)
-      newNotePersonEntities = notePersonIds.map { np =>
+      newNotePersonEntities = notePersons.map { np =>
         np.personId -> NotePersonEntity(
           noteId = noteId,
           personId = np.personId,
@@ -157,10 +177,7 @@ case class NoteServiceImpl(
   }
 
   private def toHeader(noteEntity: NoteEntity) = {
-    for {
-      noteLabelEntities <- noteLabelRepository.findAllByNoteId(noteEntity.id)
-      labels <- ZIO.foreachPar(noteLabelEntities.map(_.labelId))(labelService.getById).unless(noteLabelEntities.isEmpty)
-    } yield {
+    getLabels(noteEntity).map { labels =>
       NoteHeader(
         id = noteEntity.id,
         title = noteEntity.title,
@@ -171,17 +188,12 @@ case class NoteServiceImpl(
   }
 
   private def toNote(noteEntity: NoteEntity) = {
-    for {
-      headerFiber <- toHeader(noteEntity).fork
-      parentNoteFiber <- getParentNote(noteEntity).fork
-      childrenNotesFiber <- getChildrenNotes(noteEntity).fork
-      assigneesFiber <- getAssignees(noteEntity).fork
-
-      header <- headerFiber.join
-      parentNote <- parentNoteFiber.join
-      childrenNotes <- childrenNotesFiber.join
-      assignees <- assigneesFiber.join
-    } yield {
+    {
+      toHeader(noteEntity)
+        <&> getParentNote(noteEntity)
+        <&> getChildrenNotes(noteEntity)
+        <&> getAssignees(noteEntity)
+    }.map { case (header, parentNote, childrenNotes, assignees) =>
       Note(
         header = header,
         parentNote = parentNote,
@@ -189,6 +201,12 @@ case class NoteServiceImpl(
         message = noteEntity.message,
         assignees = assignees,
       )
+    }
+  }
+
+  private def getLabels(noteEntity: NoteEntity): Task[Option[List[Label]]] = {
+    noteLabelRepository.findAllByNoteId(noteEntity.id).flatMap { noteLabelEntities =>
+      ZIO.foreachPar(noteLabelEntities.map(_.labelId))(labelService.getById).unless(noteLabelEntities.isEmpty)
     }
   }
 
@@ -211,9 +229,7 @@ case class NoteServiceImpl(
   }
 
   private def toAssignee(notePersonEntity: NotePersonEntity) = {
-    for {
-      person <- personService.getById(notePersonEntity.personId)
-    } yield {
+    personService.getById(notePersonEntity.personId).map { person =>
       NotePerson(
         person = person,
         owner = notePersonEntity.owner,

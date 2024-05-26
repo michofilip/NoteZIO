@@ -24,7 +24,7 @@ case class NoteLabelRepositoryImpl(
   private val quillContext: QuillContext
 ) extends NoteLabelRepository {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def findAllByNoteId(noteId: Long): Task[List[NoteLabelEntity]] = transaction {
     run(query[NoteLabelEntity].filter(nl => nl.noteId == lift(noteId)))

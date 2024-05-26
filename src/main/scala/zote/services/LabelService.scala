@@ -30,7 +30,7 @@ case class LabelServiceImpl(
   private val quillContext: QuillContext
 ) extends LabelService {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def getAll: Task[List[Label]] = transaction {
     labelRepository.findAll.flatMap { labelEntities =>

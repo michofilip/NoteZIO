@@ -35,3 +35,7 @@ build
 
 #general
 *.class
+/.bloop/
+/project/.bloop/
+/project/project/
+/project/metals.sbt

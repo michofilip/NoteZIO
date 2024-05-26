@@ -32,6 +32,7 @@ object MainApp extends ZIOAppDefault {
     HealthController.layer,
     NoteController.layer,
     PersonController.layer,
+    LabelController.layer,
 
     NoteService.layer,
     LabelService.layer,
@@ -49,7 +50,7 @@ object MainApp extends ZIOAppDefault {
     ServerConfig.layer,
     SLF4JConfig.layer,
     FlywayConfig.layer,
-    DbConfig.layer,
+    DataSourceConfig.layer,
 
     ZLayer.Debug.mermaid
   ).exitCode

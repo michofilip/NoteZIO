@@ -26,7 +26,7 @@ case class NotePersonRepositoryImpl(
   private val quillContext: QuillContext
 ) extends NotePersonRepository {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def findAllByNoteId(noteId: Long): Task[List[NotePersonEntity]] = transaction {
     run(query[NotePersonEntity].filter(np => np.noteId == lift(noteId)))

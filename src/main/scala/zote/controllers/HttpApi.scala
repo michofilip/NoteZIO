@@ -12,9 +12,11 @@ object HttpApi {
     healthController <- ZIO.service[HealthController]
     noteController <- ZIO.service[NoteController]
     personController <- ZIO.service[PersonController]
+    labelController <- ZIO.service[LabelController]
   } yield List(
     healthController,
     noteController,
-    personController
+    personController,
+    labelController,
   )
 }

@@ -22,12 +22,10 @@ INSERT INTO note_person(note_id, person_id, owner)
 VALUES (1, 1, TRUE),
        (1, 2, FALSE),
        (2, 2, TRUE),
-       (3, 3, TRUE),
-       (4, 4, TRUE);
+       (3, 3, TRUE);
 
 INSERT INTO note_label(note_id, label_id)
 VALUES (1, 1),
        (2, 1),
        (2, 2),
-       (3, 3),
-       (4, 4);
+       (3, 3);

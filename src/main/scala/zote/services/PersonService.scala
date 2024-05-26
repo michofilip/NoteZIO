@@ -30,7 +30,7 @@ case class PersonServiceImpl(
   private val quillContext: QuillContext
 ) extends PersonService {
 
-  import quillContext.postgres.*
+  import quillContext.*
 
   override def getAll: Task[List[Person]] = transaction {
     personRepository.findAll.flatMap { personEntities =>
