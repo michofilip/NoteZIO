@@ -12,8 +12,6 @@ import zote.services.*
 object MainApp extends ZIOAppDefault {
 
   private val app = for {
-    _ <- FlywayService.run
-
     _ <- ZIO.logInfo("Welcome to Zote")
 
     routes <- HttpApi.routesZIO
@@ -37,7 +35,6 @@ object MainApp extends ZIOAppDefault {
     NoteService.layer,
     LabelService.layer,
     PersonService.layer,
-    FlywayService.layer,
 
     NoteRepository.layer,
     LabelRepository.layer,
@@ -49,7 +46,6 @@ object MainApp extends ZIOAppDefault {
 
     ServerConfig.layer,
     SLF4JConfig.layer,
-    FlywayConfig.layer,
     DataSourceConfig.layer,
 
     ZLayer.Debug.mermaid

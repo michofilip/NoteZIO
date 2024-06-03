@@ -5,6 +5,7 @@ import io.github.scottweaver.zio.testcontainers.postgres.ZPostgreSQLContainer
 import zio.*
 import zio.test.*
 import zio.test.TestAspect.sequential
+import zote.config.DataSourceConfig
 import zote.db.QuillContext
 
 object PersonRepositorySpec extends ZIOSpecDefault {
@@ -24,13 +25,15 @@ object PersonRepositorySpec extends ZIOSpecDefault {
           } yield assertTrue(maybePersonEntity.isEmpty)
         }
       )
-    ) @@ DbMigrationAspect.migrate(
-      """filesystem:src/main/resources/database/migrations"""
-    )() @@ sequential
+    )
+//      @@ DbMigrationAspect.migrate(
+//      """filesystem:src/main/resources/database/migrations"""
+//    )() @@ sequential
   }.provide(
     PersonRepository.layer,
     QuillContext.layer,
-    ZPostgreSQLContainer.Settings.default,
-    ZPostgreSQLContainer.live
+    DataSourceConfig.layer
+//    ZPostgreSQLContainer.Settings.default,
+//    ZPostgreSQLContainer.live
   )
 }

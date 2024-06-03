@@ -1,17 +1,17 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.4.1"
+ThisBuild / scalaVersion := "3.4.2"
 
 val zioVersion = "2.1.1"
 val zioJsonVersion = "0.6.2"
 val zioConfigVersion = "4.0.2"
-val zioLoggingVersion = "2.2.4"
+val zioLoggingVersion = "2.3.0"
 val slf4jVersion = "2.0.13"
 val quillVersion = "4.8.4"
 val postgresqlVersion = "42.7.3"
 val flywayVersion = "10.13.0"
 val quicklensVersion = "1.9.7"
-val tapirVersion = "1.10.7"
+val tapirVersion = "1.10.8"
 val testcontainersPostgresqlVersion = "0.10.0"
 
 lazy val root = (project in file("."))
