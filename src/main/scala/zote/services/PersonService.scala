@@ -5,7 +5,8 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
 import zote.db.repositories.{NotePersonRepository, PersonRepository}
-import zote.dto.{Person, PersonForm}
+import zote.dto.Person
+import zote.dto.form.PersonForm
 import zote.exceptions.{CannotDeleteException, NotFoundException}
 
 trait PersonService {

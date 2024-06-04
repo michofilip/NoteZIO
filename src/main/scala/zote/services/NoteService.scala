@@ -6,6 +6,7 @@ import zote.db.QuillContext
 import zote.db.model.{NoteEntity, NoteLabelEntity, NotePersonEntity}
 import zote.db.repositories.*
 import zote.dto.*
+import zote.dto.form.{NoteForm, NotePersonForm}
 
 trait NoteService {
   def getAll: Task[List[NoteHeader]]

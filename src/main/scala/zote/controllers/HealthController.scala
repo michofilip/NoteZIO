@@ -1,23 +1,14 @@
 package zote.controllers
 
-import sttp.tapir.AnyEndpoint
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
+import zote.endpoints.HealthEndpoints
 
-case class HealthController() extends Controller {
-  override protected val tag: String = "health"
+case class HealthController() extends Controller with HealthEndpoints {
+  private val health =
+    healthEndpoint.zServerLogic[Any](_ => ZIO.succeed("All good!"))
 
-  private val healthEndpoint = baseEndpoint
-    .name("health")
-    .description("health")
-    .get
-    .in("health")
-    .out(stringBody)
-
-  private val health = healthEndpoint.zServerLogic[Any](_ => ZIO.succeed("All good!"))
-
-  override val endpoints: List[AnyEndpoint] = List(healthEndpoint)
   override val routes: List[ServerEndpoint[Any, Task]] = List(health)
 }
 

@@ -1,4 +1,4 @@
-package zote.dto
+package zote.dto.form
 
 import zio.json.JsonCodec
 

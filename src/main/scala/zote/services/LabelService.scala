@@ -5,7 +5,8 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.LabelEntity
 import zote.db.repositories.{LabelRepository, NoteLabelRepository}
-import zote.dto.{Label, LabelForm}
+import zote.dto.Label
+import zote.dto.form.LabelForm
 import zote.exceptions.CannotDeleteException
 
 trait LabelService {
