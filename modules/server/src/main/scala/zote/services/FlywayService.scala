@@ -25,7 +25,7 @@ case class FlywayServiceImpl(
   override protected def run: Task[Unit] = ZIO.attemptUnsafe { _ =>
       val flyway = Flyway.configure()
         .dataSource(dataSource)
-//        .locations(flywayConfig.locations)
+        .locations(flywayConfig.locations)
         .load()
 
       flyway.migrate()

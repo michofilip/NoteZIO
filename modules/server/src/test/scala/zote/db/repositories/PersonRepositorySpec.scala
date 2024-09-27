@@ -1,12 +1,10 @@
 package zote.db.repositories
 
-import io.github.scottweaver.zio.aspect.DbMigrationAspect
-import io.github.scottweaver.zio.testcontainers.postgres.ZPostgreSQLContainer
 import zio.*
 import zio.test.*
-import zio.test.TestAspect.sequential
-import zote.config.DataSourceConfig
+import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
+import zote.services.FlywayService
 
 object PersonRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
@@ -14,26 +12,25 @@ object PersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findById' that")(
         test("returns option with personEntity if exists") {
           for {
+            _ <- FlywayService.run
             personRepository <- ZIO.service[PersonRepository]
             maybePersonEntity <- personRepository.findById(1)
           } yield assertTrue(maybePersonEntity.isDefined)
         },
         test("returns empty option if not exists") {
           for {
+            _ <- FlywayService.run
             personRepository <- ZIO.service[PersonRepository]
             maybePersonEntity <- personRepository.findById(-1)
           } yield assertTrue(maybePersonEntity.isEmpty)
         }
       )
     )
-//      @@ DbMigrationAspect.migrate(
-//      """filesystem:src/main/resources/database/migrations"""
-//    )() @@ sequential
   }.provide(
+    FlywayService.layer,
+    FlywayConfig.layer,
     PersonRepository.layer,
     QuillContext.layer,
     DataSourceConfig.layer
-//    ZPostgreSQLContainer.Settings.default,
-//    ZPostgreSQLContainer.live
   )
 }

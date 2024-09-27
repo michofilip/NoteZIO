@@ -16,7 +16,7 @@ trait Endpoints {
     ),
     oneOfVariant(
       statusCode(StatusCode.UnprocessableEntity)
-        .and(stringBody.mapTo[ValidationException])
+        .and(stringBody.map(ValidationException(_))(_.getMessage))
     ),
     oneOfDefaultVariant(
       statusCode(StatusCode.InternalServerError).and(

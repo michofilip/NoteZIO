@@ -7,7 +7,8 @@ import zote.db.model.PersonEntity
 import zote.db.repositories.{NotePersonRepository, PersonRepository}
 import zote.dto.Person
 import zote.dto.form.PersonForm
-import zote.exceptions.{CannotDeleteException, NotFoundException}
+import zote.dto.validation.Validator
+import zote.exceptions.ValidationException
 
 trait PersonService {
   def getAll: Task[List[Person]]
@@ -26,9 +27,9 @@ object PersonService {
 }
 
 case class PersonServiceImpl(
-  private val personRepository: PersonRepository,
-  private val notePersonRepository: NotePersonRepository,
-  private val quillContext: QuillContext
+    private val personRepository: PersonRepository,
+    private val notePersonRepository: NotePersonRepository,
+    private val quillContext: QuillContext
 ) extends PersonService {
 
   import quillContext.*
@@ -45,7 +46,7 @@ case class PersonServiceImpl(
 
   override def create(personForm: PersonForm): Task[Person] = transaction {
     for {
-      _ <- PersonForm.validateZIO(personForm)
+      _ <- Validator.validateZIO(personForm)
       personEntity <- personRepository.upsert {
         PersonEntity(name = personForm.name)
       }
@@ -53,16 +54,17 @@ case class PersonServiceImpl(
     } yield person
   }
 
-  override def update(id: Long, personForm: PersonForm): Task[Person] = transaction {
-    for {
-      _ <- PersonForm.validateZIO(personForm)
-      personEntity <- personRepository.getById(id)
-      personEntity <- personRepository.upsert {
-        personEntity.modify(_.name).setTo(personForm.name)
-      }
-      person <- toPerson(personEntity)
-    } yield person
-  }
+  override def update(id: Long, personForm: PersonForm): Task[Person] =
+    transaction {
+      for {
+        _ <- Validator.validateZIO(personForm)
+        personEntity <- personRepository.getById(id)
+        personEntity <- personRepository.upsert {
+          personEntity.modify(_.name).setTo(personForm.name)
+        }
+        person <- toPerson(personEntity)
+      } yield person
+    }
 
   override def delete(id: Long, force: Boolean): Task[Unit] = transaction {
     for {
@@ -72,7 +74,7 @@ case class PersonServiceImpl(
         if (force) {
           notePersonRepository.delete(notePersonEntities)
         } else {
-          ZIO.fail(CannotDeleteException(s"Person id: $id can not be deleted"))
+          ZIO.fail(ValidationException(s"Person id: $id can not be deleted"))
         }
       }
       _ <- personRepository.delete(id)
@@ -83,7 +85,7 @@ case class PersonServiceImpl(
     ZIO.succeed {
       Person(
         id = personEntity.id,
-        name = personEntity.name,
+        name = personEntity.name
       )
     }
   }

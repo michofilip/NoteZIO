@@ -2,28 +2,17 @@ package zote.dto.form
 
 import zio.*
 import zio.json.JsonCodec
-import zio.prelude.*
-import zote.exceptions.ValidationException
+import zote.dto.validation.Validations
+import zote.dto.validation.Validations.*
 
 case class LabelForm(
-  name: String
-)derives JsonCodec
+    name: String
+) derives JsonCodec
 
 object LabelForm {
-  def validateZIO(labelForm: LabelForm): IO[ValidationException, Unit] =
-    validate(labelForm).mapError(ValidationException.apply).toZIO
 
-  private def validate(labelForm: LabelForm): Validation[String, Unit] =
-    ZValidation.validateAll {
-      Seq(
-        validateNameNotBlank(labelForm),
-        validateNameNotToLong(labelForm)
-      )
-    }.unit
-
-  private def validateNameNotBlank(labelForm: LabelForm) =
-    ZValidation.fromPredicateWith("Name cannot be blank")(labelForm)(labelForm => !labelForm.name.isBlank)
-
-  private def validateNameNotToLong(labelForm: LabelForm) =
-    ZValidation.fromPredicateWith("Name cannot be longer then 255 characters")(labelForm)(labelForm => labelForm.name.length <= 255)
+  given Validations[LabelForm] = List(
+    notBlank("name", _.name),
+    maxLength("name", _.name, 50)
+  )
 }

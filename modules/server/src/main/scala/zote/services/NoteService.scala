@@ -8,6 +8,7 @@ import zote.db.repositories.*
 import zote.dto
 import zote.dto.*
 import zote.dto.form.*
+import zote.dto.validation.Validator
 import zote.enums.NotePersonRole
 
 trait NoteService {
@@ -112,7 +113,7 @@ case class NoteServiceImpl(
   }
 
   private def validateNote(noteForm: NoteForm) = {
-    NoteForm.validateZIO(noteForm)
+    Validator.validateZIO(noteForm)
       <&> ZIO.foreachDiscard(noteForm.parentId)(noteRepository.getById)
       <&> ZIO.foreachParDiscard(noteForm.assignees.map(_.personId))(personRepository.getById)
       <&> ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)

@@ -4,6 +4,7 @@ import io.getquill.*
 import zio.*
 import zote.db.QuillContext
 import zote.db.model.NoteEntity
+import zote.db.repositories.includes.given
 import zote.exceptions.NotFoundException
 import zote.utils.Utils
 
@@ -14,11 +15,12 @@ trait NoteRepository {
 
   def findById(id: Long): Task[Option[NoteEntity]]
 
-  final def getById(id: Long): Task[NoteEntity] = findById(id).someOrFail(NotFoundException(s"Note id: $id not found"))
+  final def getById(id: Long): Task[NoteEntity] =
+    findById(id).someOrFail(NotFoundException(s"Note id: $id not found"))
 
   def upsert(noteEntity: NoteEntity): Task[NoteEntity]
 
-  def delete(id: Long): Task[NoteEntity]
+  def delete(id: Long): Task[Unit]
 }
 
 object NoteRepository {
@@ -26,42 +28,53 @@ object NoteRepository {
 }
 
 case class NoteRepositoryImpl(
-  private val quillContext: QuillContext
+    private val quillContext: QuillContext
 ) extends NoteRepository {
 
   import quillContext.*
 
-  override def findAll: Task[List[NoteEntity]] = {
+  override def findAll: Task[List[NoteEntity]] = transaction {
     run(query[NoteEntity])
   }
 
-  override def findAllByParentId(parentId: Long): Task[List[NoteEntity]] = {
-    run(query[NoteEntity].filter(n => n.parentId.contains(lift(parentId))))
-  }
+  override def findAllByParentId(parentId: Long): Task[List[NoteEntity]] =
+    transaction {
+      run(query[NoteEntity].filter(n => n.parentId.contains(lift(parentId))))
+    }
 
-
-  override def findById(id: Long): Task[Option[NoteEntity]] = {
+  override def findById(id: Long): Task[Option[NoteEntity]] = transaction {
     run(query[NoteEntity].filter(n => n.id == lift(id)))
       .map(_.headOption)
   }
 
-  override def upsert(noteEntity: NoteEntity): Task[NoteEntity] = {
-    if (noteEntity.id == 0) {
-      run(insert(lift(noteEntity)))
-    } else {
-      run(update(lift(noteEntity)))
-    }
+  override def upsert(noteEntity: NoteEntity): Task[NoteEntity] = transaction {
+    for {
+      id <-
+        if (noteEntity.id == 0) {
+          run(insert(lift(noteEntity)))
+        } else {
+          run(update(lift(noteEntity)))
+        }
+      note <- getById(id)
+    } yield note
   }
 
-  override def delete(id: Long): Task[NoteEntity] = {
-    run(query[NoteEntity].filter(i => i.id == lift(id)).delete.returning(Utils.identity))
+  override def delete(id: Long): Task[Unit] = transaction {
+    run(
+      query[NoteEntity]
+        .filter(i => i.id == lift(id))
+        .delete
+    ).unit
   }
 
   private inline def insert = quote { (noteEntity: NoteEntity) =>
-    query[NoteEntity].insertValue(noteEntity).returning(Utils.identity)
+    query[NoteEntity].insertValue(noteEntity).returning(_.id)
   }
 
   private inline def update = quote { (noteEntity: NoteEntity) =>
-    query[NoteEntity].filter(i => i.id == noteEntity.id).updateValue(noteEntity).returning(Utils.identity)
+    query[NoteEntity]
+      .filter(i => i.id == noteEntity.id)
+      .updateValue(noteEntity)
+      .returning(_.id)
   }
 }

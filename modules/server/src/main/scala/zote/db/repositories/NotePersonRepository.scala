@@ -4,6 +4,7 @@ import io.getquill.*
 import zio.*
 import zote.db.QuillContext
 import zote.db.model.NotePersonEntity
+import zote.db.repositories.includes.given 
 
 trait NotePersonRepository {
 

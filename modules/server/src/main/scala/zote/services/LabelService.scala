@@ -7,7 +7,8 @@ import zote.db.model.LabelEntity
 import zote.db.repositories.{LabelRepository, NoteLabelRepository}
 import zote.dto.Label
 import zote.dto.form.LabelForm
-import zote.exceptions.CannotDeleteException
+import zote.dto.validation.Validator
+import zote.exceptions.ValidationException
 
 trait LabelService {
   def getAll: Task[List[Label]]
@@ -26,9 +27,9 @@ object LabelService {
 }
 
 case class LabelServiceImpl(
-  private val labelRepository: LabelRepository,
-  private val noteLabelRepository: NoteLabelRepository,
-  private val quillContext: QuillContext
+    private val labelRepository: LabelRepository,
+    private val noteLabelRepository: NoteLabelRepository,
+    private val quillContext: QuillContext
 ) extends LabelService {
 
   import quillContext.*
@@ -45,7 +46,7 @@ case class LabelServiceImpl(
 
   override def create(labelForm: LabelForm): Task[Label] = transaction {
     for {
-      _ <- LabelForm.validateZIO(labelForm)
+      _ <- Validator.validateZIO(labelForm)
       labelEntity <- labelRepository.upsert {
         LabelEntity(name = labelForm.name)
       }
@@ -53,16 +54,17 @@ case class LabelServiceImpl(
     } yield label
   }
 
-  override def update(id: Long, labelForm: LabelForm): Task[Label] = transaction {
-    for {
-      _ <- LabelForm.validateZIO(labelForm)
-      labelEntity <- labelRepository.getById(id)
-      labelEntity <- labelRepository.upsert {
-        labelEntity.modify(_.name).setTo(labelForm.name)
-      }
-      label <- toLabel(labelEntity)
-    } yield label
-  }
+  override def update(id: Long, labelForm: LabelForm): Task[Label] =
+    transaction {
+      for {
+        _ <- Validator.validateZIO(labelForm)
+        labelEntity <- labelRepository.getById(id)
+        labelEntity <- labelRepository.upsert {
+          labelEntity.modify(_.name).setTo(labelForm.name)
+        }
+        label <- toLabel(labelEntity)
+      } yield label
+    }
 
   override def delete(id: Long, force: Boolean): Task[Unit] = transaction {
     for {
@@ -72,7 +74,7 @@ case class LabelServiceImpl(
         if (force) {
           noteLabelRepository.delete(noteLabelEntities)
         } else {
-          ZIO.fail(CannotDeleteException(s"Label id: $id can not be deleted"))
+          ZIO.fail(ValidationException(s"Label id: $id can not be deleted"))
         }
       }
       _ <- labelRepository.delete(id)
@@ -83,7 +85,7 @@ case class LabelServiceImpl(
     ZIO.succeed {
       Label(
         id = labelEntity.id,
-        name = labelEntity.name,
+        name = labelEntity.name
       )
     }
   }

@@ -12,6 +12,8 @@ import zote.services.*
 object MainApp extends ZIOAppDefault {
 
   private val app = for {
+    _ <- FlywayService.run
+
     _ <- ZIO.logInfo("Welcome to Zote")
 
     routes <- HttpApi.routesZIO
@@ -26,28 +28,28 @@ object MainApp extends ZIOAppDefault {
     _ <- ZIO.never
   } yield ()
 
-  def run = app.provide(
-    HealthController.layer,
-    NoteController.layer,
-    PersonController.layer,
-    LabelController.layer,
+  def run = app
+    .provide(
+      FlywayService.layer,
+      FlywayConfig.layer,
+      HealthController.layer,
+      NoteController.layer,
+      PersonController.layer,
+      LabelController.layer,
+      NoteService.layer,
+      LabelService.layer,
+      PersonService.layer,
+      NoteRepository.layer,
+      LabelRepository.layer,
+      PersonRepository.layer,
+      NotePersonRepository.layer,
+      NoteLabelRepository.layer,
+      QuillContext.layer,
+      ServerConfig.layer,
+//    SLF4JConfig.layer,
+      DataSourceConfig.layer
 
-    NoteService.layer,
-    LabelService.layer,
-    PersonService.layer,
-
-    NoteRepository.layer,
-    LabelRepository.layer,
-    PersonRepository.layer,
-    NotePersonRepository.layer,
-    NoteLabelRepository.layer,
-
-    QuillContext.layer,
-
-    ServerConfig.layer,
-    SLF4JConfig.layer,
-    DataSourceConfig.layer,
-
-    ZLayer.Debug.mermaid
-  ).exitCode
+//    ZLayer.Debug.mermaid
+    )
+    .exitCode
 }

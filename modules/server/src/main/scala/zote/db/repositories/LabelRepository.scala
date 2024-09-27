@@ -5,7 +5,6 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.LabelEntity
 import zote.exceptions.NotFoundException
-import zote.utils.Utils
 
 trait LabelRepository {
   def findAll: Task[List[LabelEntity]]
@@ -17,7 +16,7 @@ trait LabelRepository {
 
   def upsert(labelEntity: LabelEntity): Task[LabelEntity]
 
-  def delete(id: Long): Task[LabelEntity]
+  def delete(id: Long): Task[Unit]
 }
 
 object LabelRepository {
@@ -30,40 +29,44 @@ case class LabelRepositoryImpl(
 
   import quillContext.*
 
-  override def findAll: Task[List[LabelEntity]] = {
+  override def findAll: Task[List[LabelEntity]] = transaction {
     run(query[LabelEntity])
   }
 
-  override def findById(id: Long): Task[Option[LabelEntity]] = {
+  override def findById(id: Long): Task[Option[LabelEntity]] = transaction {
     run(query[LabelEntity].filter(l => l.id == lift(id)))
       .map(_.headOption)
   }
 
-  override def upsert(labelEntity: LabelEntity): Task[LabelEntity] = {
-    if (labelEntity.id == 0) {
-      run(insert(lift(labelEntity)))
-    } else {
-      run(update(lift(labelEntity)))
+  override def upsert(labelEntity: LabelEntity): Task[LabelEntity] =
+    transaction {
+      for {
+        id <-
+          if (labelEntity.id == 0) {
+            run(insert(lift(labelEntity)))
+          } else {
+            run(update(lift(labelEntity)))
+          }
+        label <- getById(id)
+      } yield label
     }
-  }
 
-  override def delete(id: Long): Task[LabelEntity] = {
+  override def delete(id: Long): Task[Unit] = transaction {
     run(
       query[LabelEntity]
         .filter(l => l.id == lift(id))
         .delete
-        .returning(Utils.identity)
-    )
+    ).unit
   }
 
   private inline def insert = quote { (labelEntity: LabelEntity) =>
-    query[LabelEntity].insertValue(labelEntity).returning(Utils.identity)
+    query[LabelEntity].insertValue(labelEntity).returning(_.id)
   }
 
   private inline def update = quote { (labelEntity: LabelEntity) =>
     query[LabelEntity]
       .filter(l => l.id == labelEntity.id)
       .updateValue(labelEntity)
-      .returning(Utils.identity)
+      .returning(_.id)
   }
 }

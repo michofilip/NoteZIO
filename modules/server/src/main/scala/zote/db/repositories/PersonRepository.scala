@@ -12,11 +12,12 @@ trait PersonRepository {
 
   def findById(id: Long): Task[Option[PersonEntity]]
 
-  final def getById(id: Long): Task[PersonEntity] = findById(id).someOrFail(NotFoundException(s"Person id: $id not found"))
+  final def getById(id: Long): Task[PersonEntity] =
+    findById(id).someOrFail(NotFoundException(s"Person id: $id not found"))
 
   def upsert(personEntity: PersonEntity): Task[PersonEntity]
 
-  def delete(id: Long): Task[PersonEntity]
+  def delete(id: Long): Task[Unit]
 }
 
 object PersonRepository {
@@ -24,37 +25,49 @@ object PersonRepository {
 }
 
 case class PersonRepositoryImpl(
-  private val quillContext: QuillContext
+    private val quillContext: QuillContext
 ) extends PersonRepository {
 
   import quillContext.*
 
-  override def findAll: Task[List[PersonEntity]] = {
+  override def findAll: Task[List[PersonEntity]] = transaction {
     run(query[PersonEntity])
   }
 
-  override def findById(id: Long): Task[Option[PersonEntity]] = {
+  override def findById(id: Long): Task[Option[PersonEntity]] = transaction {
     run(query[PersonEntity].filter(p => p.id == lift(id)))
       .map(_.headOption)
   }
 
-  override def upsert(personEntity: PersonEntity): Task[PersonEntity] = {
-    if (personEntity.id == 0) {
-      run(insert(lift(personEntity)))
-    } else {
-      run(update(lift(personEntity)))
+  override def upsert(personEntity: PersonEntity): Task[PersonEntity] =
+    transaction {
+      for {
+        id <-
+          if (personEntity.id == 0) {
+            run(insert(lift(personEntity)))
+          } else {
+            run(update(lift(personEntity)))
+          }
+        person <- getById(id)
+      } yield person
     }
-  }
 
-  override def delete(id: Long): Task[PersonEntity] = {
-    run(query[PersonEntity].filter(p => p.id == lift(id)).delete.returning(Utils.identity))
+  override def delete(id: Long): Task[Unit] = transaction {
+    run {
+      query[PersonEntity]
+        .filter(p => p.id == lift(id))
+        .delete
+    }.unit
   }
 
   private inline def insert = quote { (personEntity: PersonEntity) =>
-    query[PersonEntity].insertValue(personEntity).returning(Utils.identity)
+    query[PersonEntity].insertValue(personEntity).returning(_.id)
   }
 
   private inline def update = quote { (personEntity: PersonEntity) =>
-    query[PersonEntity].filter(p => p.id == personEntity.id).updateValue(personEntity).returning(Utils.identity)
+    query[PersonEntity]
+      .filter(p => p.id == personEntity.id)
+      .updateValue(personEntity)
+      .returning(_.id)
   }
 }
