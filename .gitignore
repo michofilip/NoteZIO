@@ -5,7 +5,7 @@ bin/
 target/
 build/
 dist/
-.parcel-cache
+.parcel-cache/
 
 # eclipse
 build
