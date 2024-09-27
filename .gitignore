@@ -4,6 +4,8 @@ bin/
 #project/
 target/
 build/
+dist/
+.parcel-cache
 
 # eclipse
 build
