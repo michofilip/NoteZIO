@@ -41,3 +41,5 @@ build
 /project/.bloop/
 /project/project/
 /project/metals.sbt
+/modules/app/dist/
+/modules/app/.parcel-cache/
