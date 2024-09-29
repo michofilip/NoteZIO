@@ -17,6 +17,6 @@ object HttpApi {
     healthController,
     noteController,
     personController,
-    labelController,
+    labelController
   )
 }

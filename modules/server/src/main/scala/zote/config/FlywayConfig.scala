@@ -9,6 +9,9 @@ case class FlywayConfig(locations: String)
 
 object FlywayConfig {
   lazy val layer = ZLayer.fromZIO {
-    ConfigProvider.fromResourcePath().nested("flyway").load(deriveConfig[FlywayConfig])
+    ConfigProvider
+      .fromResourcePath()
+      .nested("flyway")
+      .load(deriveConfig[FlywayConfig])
   }
 }

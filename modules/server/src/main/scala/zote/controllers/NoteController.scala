@@ -3,7 +3,6 @@ package zote.controllers
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
-import zote.dto.form.NoteForm
 import zote.endpoints.NoteEndpoints
 import zote.services.NoteService
 

@@ -46,10 +46,9 @@ object MainApp extends ZIOAppDefault {
       NoteLabelRepository.layer,
       QuillContext.layer,
       ServerConfig.layer,
-//    SLF4JConfig.layer,
-      DataSourceConfig.layer
-
-//    ZLayer.Debug.mermaid
+      SLF4JConfig.layer,
+      DataSourceConfig.layer,
+      ZLayer.Debug.mermaid
     )
     .exitCode
 }

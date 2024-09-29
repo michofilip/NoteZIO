@@ -4,9 +4,9 @@ import io.getquill.*
 import zote.enums.NotePersonRole
 
 case class NotePersonEntity(
-  noteId: Long,
-  personId: Long,
-  role: NotePersonRole
+    noteId: Long,
+    personId: Long,
+    role: NotePersonRole
 )
 
 object NotePersonEntity {
@@ -14,6 +14,6 @@ object NotePersonEntity {
     "note_person",
     _.noteId -> "note_id",
     _.personId -> "person_id",
-    _.role -> "role",
+    _.role -> "role"
   )
 }

@@ -4,11 +4,11 @@ import io.getquill.*
 import zote.enums.NoteStatus
 
 case class NoteEntity(
-  title: String,
-  message: String,
-  status: NoteStatus,
-  parentId: Option[Long],
-  id: Long = 0
+    title: String,
+    message: String,
+    status: NoteStatus,
+    parentId: Option[Long],
+    id: Long = 0
 )
 
 object NoteEntity {
@@ -18,7 +18,7 @@ object NoteEntity {
     _.title -> "title",
     _.message -> "message",
     _.status -> "status",
-    _.parentId -> "parent_id",
+    _.parentId -> "parent_id"
   )
 
   inline given InsertMeta[NoteEntity] = insertMeta[NoteEntity](_.id)

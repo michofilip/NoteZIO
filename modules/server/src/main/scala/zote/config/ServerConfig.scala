@@ -9,7 +9,12 @@ import zio.http.Server
 case class ServerConfig(port: Int)
 
 object ServerConfig {
-  lazy val layer = ZLayer.fromZIO {
-    ConfigProvider.fromResourcePath().nested("network").load(deriveConfig[ServerConfig])
-  }.flatMap(conf => Server.defaultWithPort(conf.get.port))
+  lazy val layer = ZLayer
+    .fromZIO {
+      ConfigProvider
+        .fromResourcePath()
+        .nested("network")
+        .load(deriveConfig[ServerConfig])
+    }
+    .flatMap(conf => Server.defaultWithPort(conf.get.port))
 }

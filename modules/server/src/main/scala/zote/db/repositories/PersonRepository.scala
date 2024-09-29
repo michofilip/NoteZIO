@@ -5,7 +5,6 @@ import zio.*
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
 import zote.exceptions.NotFoundException
-import zote.utils.Utils
 
 trait PersonRepository {
   def findAll: Task[List[PersonEntity]]

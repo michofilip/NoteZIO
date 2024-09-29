@@ -4,7 +4,7 @@ import io.getquill.*
 import zio.*
 import zote.db.QuillContext
 import zote.db.model.NotePersonEntity
-import zote.db.repositories.includes.given 
+import zote.db.repositories.includes.given
 
 trait NotePersonRepository {
 
@@ -22,30 +22,40 @@ object NotePersonRepository {
 }
 
 case class NotePersonRepositoryImpl(
-  private val quillContext: QuillContext
+    private val quillContext: QuillContext
 ) extends NotePersonRepository {
 
   import quillContext.*
 
-  override def findAllByNoteId(noteId: Long): Task[List[NotePersonEntity]] = transaction {
-    run(query[NotePersonEntity].filter(np => np.noteId == lift(noteId)))
-  }
+  override def findAllByNoteId(noteId: Long): Task[List[NotePersonEntity]] =
+    transaction {
+      run(query[NotePersonEntity].filter(np => np.noteId == lift(noteId)))
+    }
 
-  override def findAllByPersonId(personId: Long): Task[List[NotePersonEntity]] = transaction {
-    run(query[NotePersonEntity].filter(np => np.personId == lift(personId)))
-  }
+  override def findAllByPersonId(personId: Long): Task[List[NotePersonEntity]] =
+    transaction {
+      run(query[NotePersonEntity].filter(np => np.personId == lift(personId)))
+    }
 
-  override def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
-    run(liftQuery(notePersonEntities).foreach(np => query[NotePersonEntity].insertValue(np))).unit
-  }
+  override def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
+    transaction {
+      run(
+        liftQuery(notePersonEntities).foreach(np =>
+          query[NotePersonEntity].insertValue(np)
+        )
+      ).unit
+    }
 
-  override def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] = transaction {
-    run {
-      liftQuery(notePersonEntities).foreach { npD =>
-        query[NotePersonEntity]
-          .filter(np => np.noteId == npD.noteId && np.personId == npD.personId && np.role == npD.role)
-          .delete
-      }
-    }.unit
-  }
+  override def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
+    transaction {
+      run {
+        liftQuery(notePersonEntities).foreach { npD =>
+          query[NotePersonEntity]
+            .filter(np =>
+              np.noteId == npD.noteId && np.personId == npD.personId && np.role == npD.role
+            )
+            .delete
+        }
+      }.unit
+    }
 }

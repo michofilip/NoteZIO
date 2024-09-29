@@ -6,7 +6,6 @@ import zote.db.QuillContext
 import zote.db.model.NoteEntity
 import zote.db.repositories.includes.given
 import zote.exceptions.NotFoundException
-import zote.utils.Utils
 
 trait NoteRepository {
   def findAll: Task[List[NoteEntity]]
