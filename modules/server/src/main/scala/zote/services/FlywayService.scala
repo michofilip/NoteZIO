@@ -13,8 +13,6 @@ trait FlywayService {
 }
 
 object FlywayService {
-  lazy val layer = ZLayer.derive[FlywayServiceImpl]
-
   def run: ZIO[FlywayService, Throwable, Unit] =
     ZIO.serviceWithZIO[FlywayService](_.run)
 }
@@ -39,4 +37,8 @@ case class FlywayServiceImpl(
       case _ => ZIO.unit
     }
     .onError(cause => ZIO.logErrorCause("Database migration has failed", cause))
+}
+
+object FlywayServiceImpl {
+  lazy val layer = ZLayer.derive[FlywayServiceImpl]
 }

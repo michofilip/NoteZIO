@@ -22,10 +22,6 @@ trait LabelService {
   def delete(id: Long, force: Boolean): Task[Unit]
 }
 
-object LabelService {
-  lazy val layer = ZLayer.derive[LabelServiceImpl]
-}
-
 case class LabelServiceImpl(
     private val labelRepository: LabelRepository,
     private val noteLabelRepository: NoteLabelRepository,
@@ -89,4 +85,8 @@ case class LabelServiceImpl(
       )
     }
   }
+}
+
+object LabelServiceImpl {
+  lazy val layer = ZLayer.derive[LabelServiceImpl]
 }

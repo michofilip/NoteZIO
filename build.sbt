@@ -72,7 +72,8 @@ lazy val server = (project in file("modules/server"))
       "io.github.scottweaver" %% "zio-2-0-db-migration-aspect" % testcontainersPostgresqlVersion,
 // Other
       "com.softwaremill.quicklens" %% "quicklens" % quicklensVersion
-    )
+    ),
+    testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
   )
   .dependsOn(common.jvm)
 

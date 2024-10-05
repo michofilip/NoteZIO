@@ -22,10 +22,6 @@ trait NoteService {
   def delete(id: Long): Task[Unit]
 }
 
-object NoteService {
-  lazy val layer = ZLayer.derive[NoteServiceImpl]
-}
-
 case class NoteServiceImpl(
     private val labelRepository: LabelRepository,
     private val labelService: LabelService,
@@ -273,4 +269,8 @@ case class NoteServiceImpl(
         }
     }
   }
+}
+
+object NoteServiceImpl {
+  lazy val layer = ZLayer.derive[NoteServiceImpl]
 }

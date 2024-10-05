@@ -22,10 +22,6 @@ trait NoteRepository {
   def delete(id: Long): Task[Unit]
 }
 
-object NoteRepository {
-  lazy val layer = ZLayer.derive[NoteRepositoryImpl]
-}
-
 case class NoteRepositoryImpl(
     private val quillContext: QuillContext
 ) extends NoteRepository {
@@ -76,4 +72,8 @@ case class NoteRepositoryImpl(
       .updateValue(noteEntity)
       .returning(_.id)
   }
+}
+
+object NoteRepositoryImpl {
+  lazy val layer = ZLayer.derive[NoteRepositoryImpl]
 }

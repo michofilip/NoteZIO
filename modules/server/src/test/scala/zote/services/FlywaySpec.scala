@@ -14,7 +14,7 @@ object FlywaySpec extends ZIOSpecDefault {
       }
     )
   }.provide(
-    FlywayService.layer,
+    FlywayServiceImpl.layer,
     FlywayConfig.layer,
     DataSourceConfig.layer
 //    ZPostgreSQLContainer.Settings.default,

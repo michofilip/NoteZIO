@@ -1,7 +1,7 @@
 package zote.dto.validation
 
 import com.softwaremill.quicklens.modify
-import zio.test.{Spec, TestEnvironment, ZIOSpecDefault, assertTrue}
+import zio.test.{Spec, TestAspect, TestEnvironment, ZIOSpecDefault, assertTrue}
 import zio.{Scope, ZIO}
 import zote.dto.form.{LabelForm, NoteForm, PersonForm}
 import zote.enums.NoteStatus
@@ -195,6 +195,6 @@ object ValidatorSpec extends ZIOSpecDefault {
           }
         )
       )
-    )
+    ) @@ TestAspect.sequential
   }
 }

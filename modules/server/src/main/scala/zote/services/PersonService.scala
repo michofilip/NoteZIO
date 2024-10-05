@@ -22,10 +22,6 @@ trait PersonService {
   def delete(id: Long, force: Boolean): Task[Unit]
 }
 
-object PersonService {
-  lazy val layer = ZLayer.derive[PersonServiceImpl]
-}
-
 case class PersonServiceImpl(
     private val personRepository: PersonRepository,
     private val notePersonRepository: NotePersonRepository,
@@ -89,4 +85,8 @@ case class PersonServiceImpl(
       )
     }
   }
+}
+
+object PersonServiceImpl {
+  lazy val layer = ZLayer.derive[PersonServiceImpl]
 }

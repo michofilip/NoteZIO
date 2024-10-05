@@ -19,10 +19,6 @@ trait LabelRepository {
   def delete(id: Long): Task[Unit]
 }
 
-object LabelRepository {
-  lazy val layer = ZLayer.derive[LabelRepositoryImpl]
-}
-
 case class LabelRepositoryImpl(
     private val quillContext: QuillContext
 ) extends LabelRepository {
@@ -69,4 +65,8 @@ case class LabelRepositoryImpl(
       .updateValue(labelEntity)
       .returning(_.id)
   }
+}
+
+object LabelRepositoryImpl {
+  lazy val layer = ZLayer.derive[LabelRepositoryImpl]
 }
