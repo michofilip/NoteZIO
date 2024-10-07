@@ -15,7 +15,7 @@ object LabelRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("LabelRepository")(
       suite("provides function 'findAll' that")(
-        test("returns list of LabelEntities if present") {
+        test("returns list of LabelEntities if some exist") {
           for {
             expected <- DbHelper.insertLabels(
               List(
@@ -31,7 +31,7 @@ object LabelRepositorySpec extends ZIOSpecDefault {
             && labelEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list none exist") {
+        test("returns empty list if none exist") {
           for {
             labelRepository <- ZIO.service[LabelRepository]
             labelEntities <- labelRepository.findAll

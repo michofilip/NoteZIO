@@ -98,7 +98,7 @@ case class NoteServiceImpl(
   override def delete(id: Long): Task[Unit] = transaction {
     for {
       _ <- noteRepository.getById(id)
-      _ <- deleteDependencies(id)
+      _ <- deleteDependencies(id) <&> detachChildren(id)
       _ <- noteRepository.delete(id)
     } yield ()
   }
@@ -114,6 +114,16 @@ case class NoteServiceImpl(
 
   private def deleteDependencies(noteId: Long) = {
     updateDependencies(noteId, Seq.empty, Seq.empty)
+  }
+
+  private def detachChildren(id: Long): Task[Unit] = {
+    for {
+      noteEntities <- noteRepository.findAllByParentId(id)
+      noteEntities <- ZIO.succeed(
+        noteEntities.map(_.modify(_.parentId).setTo(None))
+      )
+      _ <- ZIO.foreachParDiscard(noteEntities)(noteRepository.upsert)
+    } yield ()
   }
 
   private def updateDependencies(

@@ -14,7 +14,7 @@ val h2Version = "2.3.232"
 val flywayVersion = "10.18.2"
 val quicklensVersion = "1.9.9"
 val tapirVersion = "1.11.5"
-val sttpVersion = "3.9.8"
+val sttpVersion = "3.10.0"
 val testcontainersPostgresqlVersion = "0.10.0"
 val frontrouteVersion = "0.19.0"
 

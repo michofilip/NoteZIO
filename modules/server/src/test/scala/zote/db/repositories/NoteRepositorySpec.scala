@@ -17,7 +17,7 @@ object NoteRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("NoteRepository")(
       suite("provides function 'findAll' that")(
-        test("returns list of NoteEntities if present") {
+        test("returns list of NoteEntities if some exist") {
           for {
             expected <- DbHelper.insertNotes(
               List(
@@ -42,7 +42,7 @@ object NoteRepositorySpec extends ZIOSpecDefault {
             && noteEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list none exist") {
+        test("returns empty list if none exist") {
           for {
             noteRepository <- ZIO.service[NoteRepository]
             noteEntities <- noteRepository.findAll
@@ -71,6 +71,59 @@ object NoteRepositorySpec extends ZIOSpecDefault {
             noteRepository <- ZIO.service[NoteRepository]
             maybeNoteEntity <- noteRepository.findById(-1)
           } yield assertTrue(maybeNoteEntity.isEmpty)
+        }
+      ),
+      suite("provides function 'findAllByParentId' that") (
+        test("returns list of NoteEntities if some exist") {
+          for {
+            noteEntity <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+            childNoteEntity1 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 2",
+                message = "Message 2",
+                status = NoteStatus.Ongoing,
+                parentId = Some(noteEntity.id)
+              )
+            )
+            childNoteEntity2 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 3",
+                message = "Message 3",
+                status = NoteStatus.Ongoing,
+                parentId = Some(noteEntity.id)
+              )
+            )
+
+            noteRepository <- ZIO.service[NoteRepository]
+            noteEntities <- noteRepository.findAllByParentId(noteEntity.id)
+          } yield assertTrue {
+            noteEntities.size == 2
+            && noteEntities.contains(childNoteEntity1)
+            && noteEntities.contains(childNoteEntity2)
+          }
+        },
+        test("returns empty list if none exist") {
+          for {
+            noteEntity <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+            noteRepository <- ZIO.service[NoteRepository]
+            noteEntities <- noteRepository.findAllByParentId(noteEntity.id)
+          } yield assertTrue {
+            noteEntities.isEmpty
+          }
         }
       ),
       suite("provides function 'getById' that")(

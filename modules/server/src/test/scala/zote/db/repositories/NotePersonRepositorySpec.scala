@@ -46,7 +46,7 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("NotePersonRepository")(
       suite("provides function 'findAllByNoteId' that")(
-        test("returns list of NotePersonEntities if present") {
+        test("returns list of NotePersonEntities if some exist") {
           for {
             note <- DbHelper.insertNote(note1)
             persons <- DbHelper.insertPersons(List(person1, person2, person3))
@@ -66,7 +66,7 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
             && notePersonEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list if none") {
+        test("returns empty list if none exist") {
           for {
             note <- DbHelper.insertNote(note1)
             _ <- DbHelper.insertPersons(List(person1, person2, person3))
@@ -78,7 +78,7 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
         }
       ),
       suite("provides function 'findAllByPersonId' that")(
-        test("returns list of NotePersonEntities if present") {
+        test("returns list of NotePersonEntities if some exist") {
           for {
             notes <- DbHelper.insertNotes(List(note1, note2, note2))
             person <- DbHelper.insertPerson(person1)
@@ -100,7 +100,7 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
             && notePersonEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list if none") {
+        test("returns empty list if none exist") {
           for {
             _ <- DbHelper.insertNotes(List(note1, note2, note2))
             person <- DbHelper.insertPerson(person1)

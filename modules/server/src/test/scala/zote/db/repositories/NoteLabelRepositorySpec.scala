@@ -31,7 +31,7 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("NoteLabelRepository")(
       suite("provides function 'findAllByNoteId' that")(
-        test("returns list of NoteLabelEntities if present") {
+        test("returns list of NoteLabelEntities if some exist") {
           for {
             note <- DbHelper.insertNote(note1)
             labels <- DbHelper.insertLabels(List(label1, label2))
@@ -47,7 +47,7 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
             && noteLabelEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list if none") {
+        test("returns empty list if none exist") {
           for {
             note <- DbHelper.insertNote(note1)
             _ <- DbHelper.insertLabels(List(label1, label2))
@@ -59,7 +59,7 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
         }
       ),
       suite("provides function 'findAllByLabelId' that")(
-        test("returns list of NoteLabelEntities if present") {
+        test("returns list of NoteLabelEntities if some exist") {
           for {
             notes <- DbHelper.insertNotes(List(note1, note2))
             label <- DbHelper.insertLabel(label1)
@@ -75,7 +75,7 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
             && noteLabelEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list if none") {
+        test("returns empty list if none exist") {
           for {
             _ <- DbHelper.insertNotes(List(note1, note2))
             label <- DbHelper.insertLabel(label1)

@@ -14,7 +14,7 @@ object PersonRepositorySpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
     suite("PersonRepository")(
       suite("provides function 'findAll' that")(
-        test("returns list of PersonEntities if present") {
+        test("returns list of PersonEntities if some exist") {
           for {
             expected <- DbHelper.insertPersons(
               List(
@@ -31,7 +31,7 @@ object PersonRepositorySpec extends ZIOSpecDefault {
             && personEntities.toSet == expected.toSet
           }
         },
-        test("returns empty list none exist") {
+        test("returns empty list if none exist") {
           for {
             personRepository <- ZIO.service[PersonRepository]
             personEntities <- personRepository.findAll
