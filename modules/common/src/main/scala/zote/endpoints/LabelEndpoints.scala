@@ -50,7 +50,6 @@ trait LabelEndpoints extends Endpoints {
     .description("delete")
     .delete
     .in("label" / path[Long]("id"))
-    .in(query[Option[Boolean]]("force"))
     .out(emptyOutput)
 
   final override val endpoints: List[AnyEndpoint] = List(

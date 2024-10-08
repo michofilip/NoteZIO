@@ -27,8 +27,8 @@ class PersonController(
     personService.update(id, personsForm)
   }
 
-  private val delete = deleteEndpoint.zServerLogic[Any] { (id, force) =>
-    personService.delete(id, force.getOrElse(false))
+  private val delete = deleteEndpoint.zServerLogic[Any] { id =>
+    personService.delete(id)
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(

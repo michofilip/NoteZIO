@@ -8,7 +8,7 @@ import zote.db.model.{LabelEntity, NoteEntity, NoteLabelEntity}
 import zote.db.repositories.{LabelRepositoryImpl, NoteLabelRepositoryImpl}
 import zote.dto.form.LabelForm
 import zote.enums.NoteStatus
-import zote.exceptions.{NotFoundException, ValidationException}
+import zote.exceptions.NotFoundException
 import zote.helpers.{DbHelper, DbHelperImpl, TestAspectUtils}
 
 object LabelServiceSpec extends ZIOSpecDefault {
@@ -106,8 +106,20 @@ object LabelServiceSpec extends ZIOSpecDefault {
         test("deletes Label") {
           for {
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            noteEntity <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+            noteLabelEntity <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = noteEntity.id, labelId = labelEntity.id)
+            )
+
             labelService <- ZIO.service[LabelService]
-            _ <- labelService.delete(labelEntity.id, force = false)
+            _ <- labelService.delete(labelEntity.id)
             result <- labelService
               .getById(labelEntity.id)
               .fold(_ => true, _ => false)
@@ -117,7 +129,7 @@ object LabelServiceSpec extends ZIOSpecDefault {
           for {
             labelService <- ZIO.service[LabelService]
             result <- labelService
-              .delete(-1, force = false)
+              .delete(-1)
               .flip
               .orElseFail(new Throwable())
           } yield assertTrue {
@@ -126,55 +138,6 @@ object LabelServiceSpec extends ZIOSpecDefault {
                 e.getMessage == "Label id: -1 not found"
               case _ => false
           }
-        },
-        test("returns ValidationException if in use") {
-          for {
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            noteEntity <- DbHelper.insertNote(
-              NoteEntity(
-                title = "Note 1",
-                message = "Message 1",
-                status = NoteStatus.Ongoing,
-                parentId = None
-              )
-            )
-            noteLabelEntity <- DbHelper.insertNoteLabel(
-              NoteLabelEntity(noteId = noteEntity.id, labelId = labelEntity.id)
-            )
-
-            labelService <- ZIO.service[LabelService]
-            result <- labelService
-              .delete(labelEntity.id, force = false)
-              .flip
-              .orElseFail(new Throwable())
-          } yield assertTrue {
-            result match
-              case e: ValidationException =>
-                e.getMessage == s"Label id: ${labelEntity.id} can not be deleted"
-              case _ => false
-          }
-        },
-        test("force deletes Label if in use") {
-          for {
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            noteEntity <- DbHelper.insertNote(
-              NoteEntity(
-                title = "Note 1",
-                message = "Message 1",
-                status = NoteStatus.Ongoing,
-                parentId = None
-              )
-            )
-            noteLabelEntity <- DbHelper.insertNoteLabel(
-              NoteLabelEntity(noteId = noteEntity.id, labelId = labelEntity.id)
-            )
-
-            labelService <- ZIO.service[LabelService]
-            _ <- labelService.delete(labelEntity.id, force = true)
-            result <- labelService
-              .getById(labelEntity.id)
-              .fold(_ => true, _ => false)
-          } yield assertTrue(result)
         }
       )
     )

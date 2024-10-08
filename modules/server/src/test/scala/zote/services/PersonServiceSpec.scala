@@ -105,8 +105,24 @@ object PersonServiceSpec extends ZIOSpecDefault {
         test("deletes Person") {
           for {
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            noteEntity <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+            notePersonEntity <- DbHelper.insertNotePerson(
+              NotePersonEntity(
+                noteId = noteEntity.id,
+                personId = personEntity.id,
+                role = NotePersonRole.Owner
+              )
+            )
+            
             personService <- ZIO.service[PersonService]
-            _ <- personService.delete(personEntity.id, force = false)
+            _ <- personService.delete(personEntity.id)
             result <- personService
               .getById(personEntity.id)
               .fold(_ => true, _ => false)
@@ -116,7 +132,7 @@ object PersonServiceSpec extends ZIOSpecDefault {
           for {
             personService <- ZIO.service[PersonService]
             result <- personService
-              .delete(-1, force = false)
+              .delete(-1)
               .flip
               .orElseFail(new Throwable())
           } yield assertTrue {
@@ -126,63 +142,63 @@ object PersonServiceSpec extends ZIOSpecDefault {
               case _ => false
           }
         },
-        test("returns ValidationException if in use") {
-          for {
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            noteEntity <- DbHelper.insertNote(
-              NoteEntity(
-                title = "Note 1",
-                message = "Message 1",
-                status = NoteStatus.Ongoing,
-                parentId = None
-              )
-            )
-            notePersonEntity <- DbHelper.insertNotePerson(
-              NotePersonEntity(
-                noteId = noteEntity.id,
-                personId = personEntity.id,
-                role = NotePersonRole.Owner
-              )
-            )
-
-            personService <- ZIO.service[PersonService]
-            result <- personService
-              .delete(personEntity.id, force = false)
-              .flip
-              .orElseFail(new Throwable())
-          } yield assertTrue {
-            result match
-              case e: ValidationException =>
-                e.getMessage == s"Person id: ${personEntity.id} can not be deleted"
-              case _ => false
-          }
-        },
-        test("force deletes Label if in use") {
-          for {
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            noteEntity <- DbHelper.insertNote(
-              NoteEntity(
-                title = "Note 1",
-                message = "Message 1",
-                status = NoteStatus.Ongoing,
-                parentId = None
-              )
-            )
-            notePersonEntity <- DbHelper.insertNotePerson(
-              NotePersonEntity(
-                noteId = noteEntity.id,
-                personId = personEntity.id,
-                role = NotePersonRole.Owner
-              )
-            )
-
-            personService <- ZIO.service[PersonService]
-            _ <- personService.delete(personEntity.id, force = true)
-            result <- personService
-              .getById(personEntity.id)
-              .fold(_ => true, _ => false)
-          } yield assertTrue(result)
-        }
+//        test("returns ValidationException if in use") {
+//          for {
+//            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+//            noteEntity <- DbHelper.insertNote(
+//              NoteEntity(
+//                title = "Note 1",
+//                message = "Message 1",
+//                status = NoteStatus.Ongoing,
+//                parentId = None
+//              )
+//            )
+//            notePersonEntity <- DbHelper.insertNotePerson(
+//              NotePersonEntity(
+//                noteId = noteEntity.id,
+//                personId = personEntity.id,
+//                role = NotePersonRole.Owner
+//              )
+//            )
+//
+//            personService <- ZIO.service[PersonService]
+//            result <- personService
+//              .delete(personEntity.id, force = false)
+//              .flip
+//              .orElseFail(new Throwable())
+//          } yield assertTrue {
+//            result match
+//              case e: ValidationException =>
+//                e.getMessage == s"Person id: ${personEntity.id} can not be deleted"
+//              case _ => false
+//          }
+//        },
+//        test("force deletes Label if in use") {
+//          for {
+//            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+//            noteEntity <- DbHelper.insertNote(
+//              NoteEntity(
+//                title = "Note 1",
+//                message = "Message 1",
+//                status = NoteStatus.Ongoing,
+//                parentId = None
+//              )
+//            )
+//            notePersonEntity <- DbHelper.insertNotePerson(
+//              NotePersonEntity(
+//                noteId = noteEntity.id,
+//                personId = personEntity.id,
+//                role = NotePersonRole.Owner
+//              )
+//            )
+//
+//            personService <- ZIO.service[PersonService]
+//            _ <- personService.delete(personEntity.id, force = true)
+//            result <- personService
+//              .getById(personEntity.id)
+//              .fold(_ => true, _ => false)
+//          } yield assertTrue(result)
+//        }
       )
     )
       @@ TestAspectUtils.rollback

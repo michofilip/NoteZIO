@@ -27,8 +27,8 @@ class LabelController(
     labelService.update(id, labelForm)
   }
 
-  private val delete = deleteEndpoint.zServerLogic[Any] { (id, force) =>
-    labelService.delete(id, force.getOrElse(false))
+  private val delete = deleteEndpoint.zServerLogic[Any] { id =>
+    labelService.delete(id)
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(

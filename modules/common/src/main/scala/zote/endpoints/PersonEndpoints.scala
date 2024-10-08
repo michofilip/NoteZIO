@@ -49,7 +49,6 @@ trait PersonEndpoints extends Endpoints {
     .description("delete")
     .delete
     .in("persons" / path[Long]("id"))
-    .in(query[Option[Boolean]]("force"))
     .out(emptyOutput)
 
   final override val endpoints: List[AnyEndpoint] = List(

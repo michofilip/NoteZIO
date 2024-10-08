@@ -8,7 +8,6 @@ import zote.db.repositories.{LabelRepository, NoteLabelRepository}
 import zote.dto.Label
 import zote.dto.form.LabelForm
 import zote.dto.validation.Validator
-import zote.exceptions.ValidationException
 
 trait LabelService {
   def getAll: Task[List[Label]]
@@ -19,7 +18,7 @@ trait LabelService {
 
   def update(id: Long, labelForm: LabelForm): Task[Label]
 
-  def delete(id: Long, force: Boolean): Task[Unit]
+  def delete(id: Long): Task[Unit]
 }
 
 case class LabelServiceImpl(
@@ -62,17 +61,13 @@ case class LabelServiceImpl(
       } yield label
     }
 
-  override def delete(id: Long, force: Boolean): Task[Unit] = transaction {
+  override def delete(id: Long): Task[Unit] = transaction {
     for {
       _ <- labelRepository.getById(id)
       noteLabelEntities <- noteLabelRepository.findAllByLabelId(id)
-      _ <- ZIO.unless(noteLabelEntities.isEmpty) {
-        if (force) {
-          noteLabelRepository.delete(noteLabelEntities)
-        } else {
-          ZIO.fail(ValidationException(s"Label id: $id can not be deleted"))
-        }
-      }
+      _ <- noteLabelRepository
+        .delete(noteLabelEntities)
+        .unless(noteLabelEntities.isEmpty)
       _ <- labelRepository.delete(id)
     } yield ()
   }
