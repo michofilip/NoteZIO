@@ -15,7 +15,7 @@ trait LabelEndpoints extends Endpoints {
     .name("getAll")
     .description("getAll")
     .get
-    .in("label")
+    .in("labels")
     .out(jsonBody[List[Label]])
 
   val getByIdEndpoint = baseEndpoint
@@ -31,7 +31,7 @@ trait LabelEndpoints extends Endpoints {
     .name("create")
     .description("create")
     .post
-    .in("label")
+    .in("labels")
     .in(jsonBody[LabelForm])
     .out(jsonBody[Label])
 
@@ -40,7 +40,7 @@ trait LabelEndpoints extends Endpoints {
     .name("update")
     .description("update")
     .put
-    .in("label" / path[Long]("id"))
+    .in("labels" / path[Long]("id"))
     .in(jsonBody[LabelForm])
     .out(jsonBody[Label])
 
@@ -49,7 +49,7 @@ trait LabelEndpoints extends Endpoints {
     .name("delete")
     .description("delete")
     .delete
-    .in("label" / path[Long]("id"))
+    .in("labels" / path[Long]("id"))
     .out(emptyOutput)
 
   final override val endpoints: List[AnyEndpoint] = List(

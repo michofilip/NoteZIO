@@ -34,23 +34,29 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
         test("returns list of NoteLabelEntities if some exist") {
           for {
             note <- DbHelper.insertNote(note1)
-            labels <- DbHelper.insertLabels(List(label1, label2))
-            expected <- DbHelper.insertNoteLabels(
-              labels.map { label =>
-                NoteLabelEntity(noteId = note.id, labelId = label.id)
-              }
+            label1 <- DbHelper.insertLabel(label1)
+            label2 <- DbHelper.insertLabel(label2)
+            noteLabel1 <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = note.id, labelId = label1.id)
             )
+            noteLabel2 <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = note.id, labelId = label2.id)
+            )
+
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
             noteLabelEntities <- noteLabelRepository.findAllByNoteId(note.id)
           } yield assertTrue {
-            noteLabelEntities.size == expected.size
-            && noteLabelEntities.toSet == expected.toSet
+            noteLabelEntities.size == 2
+            && noteLabelEntities.contains(noteLabel1)
+            && noteLabelEntities.contains(noteLabel2)
           }
         },
         test("returns empty list if none exist") {
           for {
             note <- DbHelper.insertNote(note1)
-            _ <- DbHelper.insertLabels(List(label1, label2))
+            _ <- DbHelper.insertLabel(label1)
+            _ <- DbHelper.insertLabel(label2)
+
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
             noteLabelEntities <- noteLabelRepository.findAllByNoteId(note.id)
           } yield assertTrue {
@@ -61,24 +67,30 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findAllByLabelId' that")(
         test("returns list of NoteLabelEntities if some exist") {
           for {
-            notes <- DbHelper.insertNotes(List(note1, note2))
+            note1 <- DbHelper.insertNote(note1)
+            note2 <- DbHelper.insertNote(note2)
             label <- DbHelper.insertLabel(label1)
-            expected <- DbHelper.insertNoteLabels(
-              notes.map { note =>
-                NoteLabelEntity(noteId = note.id, labelId = label.id)
-              }
+            noteLabel1 <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = note1.id, labelId = label.id)
             )
+            noteLabel2 <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = note2.id, labelId = label.id)
+            )
+
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
             noteLabelEntities <- noteLabelRepository.findAllByLabelId(label.id)
           } yield assertTrue {
-            noteLabelEntities.size == expected.size
-            && noteLabelEntities.toSet == expected.toSet
+            noteLabelEntities.size == 2
+            && noteLabelEntities.contains(noteLabel1)
+            && noteLabelEntities.contains(noteLabel2)
           }
         },
         test("returns empty list if none exist") {
           for {
-            _ <- DbHelper.insertNotes(List(note1, note2))
+            _ <- DbHelper.insertNote(note1)
+            _ <- DbHelper.insertNote(note2)
             label <- DbHelper.insertLabel(label1)
+
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
             noteLabelEntities <- noteLabelRepository.findAllByLabelId(label.id)
           } yield assertTrue {
@@ -91,27 +103,24 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
           for {
             note <- DbHelper.insertNote(note1)
             label <- DbHelper.insertLabel(label1)
+            noteLabel = NoteLabelEntity(noteId = note.id, labelId = label.id)
 
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
-            isEmptyByNote <- noteLabelRepository
-              .findAllByNoteId(note.id)
-              .map(_.isEmpty)
-            isEmptyByLabel <- noteLabelRepository
-              .findAllByLabelId(label.id)
-              .map(_.isEmpty)
-
             _ <- noteLabelRepository.insert(
-              List(NoteLabelEntity(noteId = note.id, labelId = label.id))
+              List(noteLabel)
             )
 
-            nonEmptyByNote <- noteLabelRepository
-              .findAllByNoteId(note.id)
-              .map(_.nonEmpty)
-            nonEmptyByLabel <- noteLabelRepository
-              .findAllByLabelId(label.id)
-              .map(_.nonEmpty)
+            noteLabelEntitiesByNoteId <- noteLabelRepository.findAllByNoteId(
+              note.id
+            )
+            noteLabelEntitiesByLabelId <- noteLabelRepository.findAllByLabelId(
+              label.id
+            )
           } yield assertTrue {
-            isEmptyByNote && isEmptyByLabel && nonEmptyByNote && nonEmptyByLabel
+            noteLabelEntitiesByNoteId.size == 1
+            && noteLabelEntitiesByLabelId.size == 1
+            && noteLabelEntitiesByNoteId.contains(noteLabel)
+            && noteLabelEntitiesByLabelId.contains(noteLabel)
           }
         }
       ),
@@ -125,25 +134,17 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
             )
 
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
-            nonEmptyByNote <- noteLabelRepository
-              .findAllByNoteId(note.id)
-              .map(_.nonEmpty)
-            nonEmptyByLabel <- noteLabelRepository
-              .findAllByLabelId(label.id)
-              .map(_.nonEmpty)
-
             _ <- noteLabelRepository.delete(
               List(noteLabel)
             )
 
-            isEmptyByNote <- noteLabelRepository
+            noteLabelEntitiesByNoteId <- noteLabelRepository
               .findAllByNoteId(note.id)
-              .map(_.isEmpty)
-            isEmptyByLabel <- noteLabelRepository
+            noteLabelEntitiesByLabelId <- noteLabelRepository
               .findAllByLabelId(label.id)
-              .map(_.isEmpty)
           } yield assertTrue {
-            nonEmptyByNote && nonEmptyByLabel && isEmptyByNote && isEmptyByLabel
+            noteLabelEntitiesByNoteId.isEmpty
+            && noteLabelEntitiesByLabelId.isEmpty
           }
         }
       )

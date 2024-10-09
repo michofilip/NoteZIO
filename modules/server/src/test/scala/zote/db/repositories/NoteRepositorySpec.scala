@@ -19,27 +19,29 @@ object NoteRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findAll' that")(
         test("returns list of NoteEntities if some exist") {
           for {
-            expected <- DbHelper.insertNotes(
-              List(
-                NoteEntity(
-                  title = "Note 1",
-                  message = "Message 1",
-                  status = NoteStatus.Ongoing,
-                  parentId = None
-                ),
-                NoteEntity(
-                  title = "Note 2",
-                  message = "Message 2",
-                  status = NoteStatus.Ongoing,
-                  parentId = None
-                )
+            noteEntity1 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
               )
             )
+            noteEntity2 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 2",
+                message = "Message 2",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+
             noteRepository <- ZIO.service[NoteRepository]
             noteEntities <- noteRepository.findAll
           } yield assertTrue {
-            noteEntities.size == expected.size
-            && noteEntities.toSet == expected.toSet
+            noteEntities.size == 2
+            && noteEntities.contains(noteEntity1)
+            && noteEntities.contains(noteEntity2)
           }
         },
         test("returns empty list if none exist") {
@@ -73,7 +75,7 @@ object NoteRepositorySpec extends ZIOSpecDefault {
           } yield assertTrue(maybeNoteEntity.isEmpty)
         }
       ),
-      suite("provides function 'findAllByParentId' that") (
+      suite("provides function 'findAllByParentId' that")(
         test("returns list of NoteEntities if some exist") {
           for {
             noteEntity <- DbHelper.insertNote(
@@ -205,12 +207,9 @@ object NoteRepositorySpec extends ZIOSpecDefault {
               )
               .map(_.id)
             noteRepository <- ZIO.service[NoteRepository]
-            isDefined <- noteRepository
-              .findById(id)
-              .map(_.isDefined)
             _ <- noteRepository.delete(id)
-            isEmpty <- noteRepository.findById(id).map(_.isEmpty)
-          } yield assertTrue(isDefined && isEmpty)
+            maybeNoteEntity <- noteRepository.findById(id)
+          } yield assertTrue(maybeNoteEntity.isEmpty)
         },
         test("does nothing if NoteEntity not exists") {
           for {

@@ -6,6 +6,7 @@ import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
 import zote.db.model.{NoteEntity, NotePersonEntity, PersonEntity}
 import zote.db.repositories.{NotePersonRepositoryImpl, PersonRepositoryImpl}
+import zote.dto.Person
 import zote.dto.form.PersonForm
 import zote.enums.{NotePersonRole, NoteStatus}
 import zote.exceptions.{NotFoundException, ValidationException}
@@ -18,20 +19,18 @@ object PersonServiceSpec extends ZIOSpecDefault {
       suite("provides function 'getAll' that")(
         test("returns list of Persons if some exist") {
           for {
-            personEntities <- DbHelper.insertPersons(
-              List(
-                PersonEntity(name = "Ala"),
-                PersonEntity(name = "Ela")
-              )
-            )
+            personEntity1 <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            personEntity2 <- DbHelper.insertPerson(PersonEntity(name = "Ela"))
+
             personService <- ZIO.service[PersonService]
             persons <- personService.getAll
           } yield assertTrue {
-            persons.size == personEntities.size
-            && persons.forall(label =>
-              personEntities
-                .find(l => l.id == label.id)
-                .exists(l => l.name == label.name)
+            persons.size == 2
+            && persons.contains(
+              Person(id = personEntity1.id, name = personEntity1.name)
+            )
+            && persons.contains(
+              Person(id = personEntity2.id, name = personEntity2.name)
             )
           }
         },
@@ -120,7 +119,7 @@ object PersonServiceSpec extends ZIOSpecDefault {
                 role = NotePersonRole.Owner
               )
             )
-            
+
             personService <- ZIO.service[PersonService]
             _ <- personService.delete(personEntity.id)
             result <- personService
@@ -141,64 +140,7 @@ object PersonServiceSpec extends ZIOSpecDefault {
                 e.getMessage == "Person id: -1 not found"
               case _ => false
           }
-        },
-//        test("returns ValidationException if in use") {
-//          for {
-//            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-//            noteEntity <- DbHelper.insertNote(
-//              NoteEntity(
-//                title = "Note 1",
-//                message = "Message 1",
-//                status = NoteStatus.Ongoing,
-//                parentId = None
-//              )
-//            )
-//            notePersonEntity <- DbHelper.insertNotePerson(
-//              NotePersonEntity(
-//                noteId = noteEntity.id,
-//                personId = personEntity.id,
-//                role = NotePersonRole.Owner
-//              )
-//            )
-//
-//            personService <- ZIO.service[PersonService]
-//            result <- personService
-//              .delete(personEntity.id, force = false)
-//              .flip
-//              .orElseFail(new Throwable())
-//          } yield assertTrue {
-//            result match
-//              case e: ValidationException =>
-//                e.getMessage == s"Person id: ${personEntity.id} can not be deleted"
-//              case _ => false
-//          }
-//        },
-//        test("force deletes Label if in use") {
-//          for {
-//            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-//            noteEntity <- DbHelper.insertNote(
-//              NoteEntity(
-//                title = "Note 1",
-//                message = "Message 1",
-//                status = NoteStatus.Ongoing,
-//                parentId = None
-//              )
-//            )
-//            notePersonEntity <- DbHelper.insertNotePerson(
-//              NotePersonEntity(
-//                noteId = noteEntity.id,
-//                personId = personEntity.id,
-//                role = NotePersonRole.Owner
-//              )
-//            )
-//
-//            personService <- ZIO.service[PersonService]
-//            _ <- personService.delete(personEntity.id, force = true)
-//            result <- personService
-//              .getById(personEntity.id)
-//              .fold(_ => true, _ => false)
-//          } yield assertTrue(result)
-//        }
+        }
       )
     )
       @@ TestAspectUtils.rollback

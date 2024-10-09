@@ -18,47 +18,54 @@ object NoteServiceSpec extends ZIOSpecDefault {
       suite("provides function 'getAll' that")(
         test("returns list of NoteHeaders if some exist") {
           for {
-            noteEntities <- DbHelper.insertNotes(
-              List(
-                NoteEntity(
-                  title = "Note 1",
-                  message = "Message 1",
-                  status = NoteStatus.Ongoing,
-                  parentId = None
-                ),
-                NoteEntity(
-                  title = "Note 2",
-                  message = "Message 2",
-                  status = NoteStatus.Ongoing,
-                  parentId = None
-                )
+            noteEntity1 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 1",
+                message = "Message 1",
+                status = NoteStatus.Ongoing,
+                parentId = None
+              )
+            )
+            noteEntity2 <- DbHelper.insertNote(
+              NoteEntity(
+                title = "Note 2",
+                message = "Message 2",
+                status = NoteStatus.Ongoing,
+                parentId = None
               )
             )
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            _ <- DbHelper.insertNoteLabels(
-              noteEntities.map { noteEntity =>
-                NoteLabelEntity(
-                  noteId = noteEntity.id,
-                  labelId = labelEntity.id
-                )
-              }
+            _ <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = noteEntity1.id, labelId = labelEntity.id)
+            )
+            _ <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(noteId = noteEntity2.id, labelId = labelEntity.id)
             )
 
             noteService <- ZIO.service[NoteService]
             noteHeaders <- noteService.getAll
           } yield assertTrue {
-            noteHeaders.size == noteEntities.size
-            && noteHeaders.forall { noteHeader =>
-              noteEntities
-                .find(noteEntity => noteEntity.id == noteHeader.id)
-                .exists { noteEntity =>
-                  noteHeader.title == noteEntity.title
-                  && noteHeader.status == noteEntity.status
-                }
-              && noteHeader.labels.contains(
-                List(Label(id = labelEntity.id, name = labelEntity.name))
+            noteHeaders.size == 2
+            && noteHeaders.contains(
+              NoteHeader(
+                id = noteEntity1.id,
+                title = noteEntity1.title,
+                status = noteEntity1.status,
+                labels = Some(
+                  List(Label(id = labelEntity.id, name = labelEntity.name))
+                )
               )
-            }
+            )
+            && noteHeaders.contains(
+              NoteHeader(
+                id = noteEntity2.id,
+                title = noteEntity2.title,
+                status = noteEntity2.status,
+                labels = Some(
+                  List(Label(id = labelEntity.id, name = labelEntity.name))
+                )
+              )
+            )
           }
         },
         test("returns empty list if none exist") {
@@ -99,21 +106,17 @@ object NoteServiceSpec extends ZIOSpecDefault {
             )
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            _ <- DbHelper.insertNoteLabels(
-              List(
-                NoteLabelEntity(
-                  noteId = noteEntity.id,
-                  labelId = labelEntity.id
-                )
+            _ <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(
+                noteId = noteEntity.id,
+                labelId = labelEntity.id
               )
             )
-            _ <- DbHelper.insertNotePersons(
-              List(
-                NotePersonEntity(
-                  noteId = noteEntity.id,
-                  personId = personEntity.id,
-                  role = NotePersonRole.Owner
-                )
+            _ <- DbHelper.insertNotePerson(
+              NotePersonEntity(
+                noteId = noteEntity.id,
+                personId = personEntity.id,
+                role = NotePersonRole.Owner
               )
             )
 
@@ -363,21 +366,17 @@ object NoteServiceSpec extends ZIOSpecDefault {
             )
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            _ <- DbHelper.insertNoteLabels(
-              List(
-                NoteLabelEntity(
-                  noteId = noteEntity.id,
-                  labelId = labelEntity.id
-                )
+            _ <- DbHelper.insertNoteLabel(
+              NoteLabelEntity(
+                noteId = noteEntity.id,
+                labelId = labelEntity.id
               )
             )
-            _ <- DbHelper.insertNotePersons(
-              List(
-                NotePersonEntity(
-                  noteId = noteEntity.id,
-                  personId = personEntity.id,
-                  role = NotePersonRole.Owner
-                )
+            _ <- DbHelper.insertNotePerson(
+              NotePersonEntity(
+                noteId = noteEntity.id,
+                personId = personEntity.id,
+                role = NotePersonRole.Owner
               )
             )
 

@@ -25,6 +25,8 @@ object MainApp extends ZIOAppDefault {
     )
     _ <- ZIO.logInfo(s"Server started at port: $port")
 
+    _ <- InitHelper.init()
+
     _ <- ZIO.never
   } yield ()
 
@@ -48,7 +50,8 @@ object MainApp extends ZIOAppDefault {
       ServerConfig.layer,
       SLF4JConfig.layer,
       DataSourceConfig.layer,
-      ZLayer.Debug.mermaid
+      InitHelperImpl.layer,
+//      ZLayer.Debug.mermaid
     )
     .exitCode
 }

@@ -16,19 +16,15 @@ object PersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findAll' that")(
         test("returns list of PersonEntities if some exist") {
           for {
-            expected <- DbHelper.insertPersons(
-              List(
-                PersonEntity(name = "Ala"),
-                PersonEntity(name = "Ela"),
-                PersonEntity(name = "Ola"),
-                PersonEntity(name = "Ula")
-              )
-            )
+            person1 <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            person2 <- DbHelper.insertPerson(PersonEntity(name = "Ela"))
+
             personRepository <- ZIO.service[PersonRepository]
             personEntities <- personRepository.findAll
           } yield assertTrue {
-            personEntities.size == expected.size
-            && personEntities.toSet == expected.toSet
+            personEntities.size == 2
+            && personEntities.contains(person1)
+            && personEntities.contains(person2)
           }
         },
         test("returns empty list if none exist") {
@@ -43,12 +39,12 @@ object PersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findById' that")(
         test("returns option with PersonEntity if exists") {
           for {
-            expected <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            person <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
             personRepository <- ZIO.service[PersonRepository]
             maybePersonEntity <- personRepository
-              .findById(expected.id)
+              .findById(person.id)
           } yield assertTrue {
-            maybePersonEntity.contains(expected)
+            maybePersonEntity.contains(person)
           }
         },
         test("returns empty option if not exists") {
@@ -61,10 +57,10 @@ object PersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'getById' that")(
         test("returns PersonEntity if exists") {
           for {
-            expected <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            person <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
             personRepository <- ZIO.service[PersonRepository]
-            personEntity <- personRepository.getById(expected.id)
-          } yield assertTrue(personEntity == expected)
+            personEntity <- personRepository.getById(person.id)
+          } yield assertTrue(personEntity == person)
         },
         test("returns NotFoundException if not exists") {
           for {
@@ -103,14 +99,11 @@ object PersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'delete' that")(
         test("deletes PersonEntity if exists") {
           for {
-            id <- DbHelper.insertPerson(PersonEntity(name = "Ala")).map(_.id)
+            person <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
             personRepository <- ZIO.service[PersonRepository]
-            isDefined <- personRepository
-              .findById(id)
-              .map(_.isDefined)
-            _ <- personRepository.delete(id)
-            isEmpty <- personRepository.findById(id).map(_.isEmpty)
-          } yield assertTrue(isDefined && isEmpty)
+            _ <- personRepository.delete(person.id)
+            maybePersonEntity <- personRepository.findById(person.id)
+          } yield assertTrue(maybePersonEntity.isEmpty)
         },
         test("does nothing if PersonEntity not exists") {
           for {

@@ -17,18 +17,15 @@ object LabelRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findAll' that")(
         test("returns list of LabelEntities if some exist") {
           for {
-            expected <- DbHelper.insertLabels(
-              List(
-                LabelEntity(name = "Red"),
-                LabelEntity(name = "Green"),
-                LabelEntity(name = "Blue")
-              )
-            )
+            label1 <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            label2 <- DbHelper.insertLabel(LabelEntity(name = "Green"))
+
             labelRepository <- ZIO.service[LabelRepository]
             labelEntities <- labelRepository.findAll
           } yield assertTrue {
-            labelEntities.size == expected.size
-            && labelEntities.toSet == expected.toSet
+            labelEntities.size == 2
+            && labelEntities.contains(label1)
+            && labelEntities.contains(label2)
           }
         },
         test("returns empty list if none exist") {
@@ -43,10 +40,10 @@ object LabelRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findById' that")(
         test("returns option with LabelEntity if exists") {
           for {
-            expected <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            label <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             labelRepository <- ZIO.service[LabelRepository]
-            maybeLabelEntity <- labelRepository.findById(expected.id)
-          } yield assertTrue(maybeLabelEntity.contains(expected))
+            maybeLabelEntity <- labelRepository.findById(label.id)
+          } yield assertTrue(maybeLabelEntity.contains(label))
         },
         test("returns empty option if not exists") {
           for {
@@ -58,10 +55,10 @@ object LabelRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'getById' that")(
         test("returns LabelEntity if exists") {
           for {
-            expected <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            label <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             labelRepository <- ZIO.service[LabelRepository]
-            labelEntity <- labelRepository.getById(expected.id)
-          } yield assertTrue(labelEntity == expected)
+            labelEntity <- labelRepository.getById(label.id)
+          } yield assertTrue(labelEntity == label)
         },
         test("returns NotFoundException if not exists") {
           for {
@@ -100,14 +97,11 @@ object LabelRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'delete' that")(
         test("deletes LabelEntity if exists") {
           for {
-            id <- DbHelper.insertLabel(LabelEntity(name = "Red")).map(_.id)
+            label <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             labelRepository <- ZIO.service[LabelRepository]
-            isDefined <- labelRepository
-              .findById(id)
-              .map(_.isDefined)
-            _ <- labelRepository.delete(id)
-            isEmpty <- labelRepository.findById(id).map(_.isEmpty)
-          } yield assertTrue(isDefined && isEmpty)
+            _ <- labelRepository.delete(label.id)
+            maybeLabelEntity <- labelRepository.findById(label.id)
+          } yield assertTrue(maybeLabelEntity.isEmpty)
         },
         test("does nothing if LabelEntity not exists") {
           for {

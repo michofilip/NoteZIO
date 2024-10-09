@@ -6,6 +6,7 @@ import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
 import zote.db.model.{LabelEntity, NoteEntity, NoteLabelEntity}
 import zote.db.repositories.{LabelRepositoryImpl, NoteLabelRepositoryImpl}
+import zote.dto.Label
 import zote.dto.form.LabelForm
 import zote.enums.NoteStatus
 import zote.exceptions.NotFoundException
@@ -18,21 +19,18 @@ object LabelServiceSpec extends ZIOSpecDefault {
       suite("provides function 'getAll' that")(
         test("returns list of Labels if some exist") {
           for {
-            labelEntities <- DbHelper.insertLabels(
-              List(
-                LabelEntity(name = "Red"),
-                LabelEntity(name = "Green"),
-                LabelEntity(name = "Blue")
-              )
-            )
+            labelEntity1 <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity2 <- DbHelper.insertLabel(LabelEntity(name = "Green"))
+
             labelService <- ZIO.service[LabelService]
             labels <- labelService.getAll
           } yield assertTrue {
-            labels.size == labelEntities.size
-            && labels.forall(label =>
-              labelEntities
-                .find(l => l.id == label.id)
-                .exists(l => l.name == label.name)
+            labels.size == 2
+            && labels.contains(
+              Label(id = labelEntity1.id, name = labelEntity1.name)
+            )
+            && labels.contains(
+              Label(id = labelEntity2.id, name = labelEntity2.name)
             )
           }
         },
