@@ -13,9 +13,7 @@ object MainApp extends ZIOAppDefault {
 
   private val app = for {
     _ <- FlywayService.run
-
-    _ <- ZIO.logInfo("Welcome to Zote")
-
+    
     routes <- HttpApi.routesZIO
     swaggerRoutes <- SwaggerApi.routesZIO
     port <- Server.install(
@@ -23,9 +21,11 @@ object MainApp extends ZIOAppDefault {
         ZioHttpServerOptions.default
       ).toHttp(routes ++ swaggerRoutes)
     )
+
+    _ <- ZIO.logInfo("Welcome to Zote")
     _ <- ZIO.logInfo(s"Server started at port: $port")
 
-    _ <- InitHelper.init()
+    _ <- InitHelper.initDb()
 
     _ <- ZIO.never
   } yield ()
@@ -50,7 +50,7 @@ object MainApp extends ZIOAppDefault {
       ServerConfig.layer,
       SLF4JConfig.layer,
       DataSourceConfig.layer,
-      InitHelperImpl.layer,
+      InitHelperImpl.layer
 //      ZLayer.Debug.mermaid
     )
     .exitCode

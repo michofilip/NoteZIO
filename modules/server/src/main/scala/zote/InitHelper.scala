@@ -6,11 +6,11 @@ import zote.enums.{NotePersonRole, NoteStatus}
 import zote.services.{LabelService, NoteService, PersonService}
 
 trait InitHelper {
-  def init(): Task[Unit]
+  def initDb(): Task[Unit]
 }
 
 object InitHelper {
-  def init() = ZIO.serviceWithZIO[InitHelper](_.init())
+  def initDb() = ZIO.serviceWithZIO[InitHelper](_.initDb())
 }
 
 case class InitHelperImpl(
@@ -18,7 +18,7 @@ case class InitHelperImpl(
     private val personService: PersonService,
     private val labelService: LabelService
 ) extends InitHelper {
-  override def init(): Task[Unit] = {
+  override def initDb(): Task[Unit] = {
     for {
       label1 <- labelService.create(LabelForm(name = "Red"))
       label2 <- labelService.create(LabelForm(name = "Green"))
