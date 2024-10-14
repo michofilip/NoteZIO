@@ -1,8 +1,7 @@
 package zote.endpoints
 
 import sttp.model.StatusCode
-import sttp.tapir.AnyEndpoint
-import sttp.tapir.ztapir.*
+import sttp.tapir.*
 import zote.exceptions.*
 
 trait Endpoints {

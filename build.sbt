@@ -2,7 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "3.5.1"
 
-val zioVersion = "2.1.9"
+val zioVersion = "2.1.11"
 val zioJsonVersion = "0.7.3"
 val zioConfigVersion = "4.0.2"
 val zioLoggingVersion = "2.3.1"
@@ -13,8 +13,9 @@ val quillVersion = "4.8.5"
 val h2Version = "2.3.232"
 val flywayVersion = "10.18.2"
 val quicklensVersion = "1.9.9"
-val tapirVersion = "1.11.5"
+val tapirVersion = "1.11.7"
 val sttpVersion = "3.10.0"
+//val sttpVersion = "4.0.0-M18"
 val testcontainersPostgresqlVersion = "0.10.0"
 val frontrouteVersion = "0.19.0"
 
@@ -62,6 +63,7 @@ lazy val server = (project in file("modules/server"))
       "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-bundle" % tapirVersion,
       "com.softwaremill.sttp.tapir" %% "tapir-sttp-stub-server" % tapirVersion % Test,
       "com.softwaremill.sttp.client3" %% "zio" % sttpVersion,
+//      "com.softwaremill.sttp.client4" %% "zio" % sttpVersion,
 // DB
       "io.getquill" %% "quill-jdbc-zio" % quillVersion,
 //      "org.postgresql" % "postgresql" % postgresqlVersion,
@@ -83,6 +85,7 @@ lazy val app = (project in file("modules/app"))
       "com.softwaremill.sttp.tapir" %%% "tapir-sttp-client" % tapirVersion,
       "com.softwaremill.sttp.tapir" %%% "tapir-json-zio" % tapirVersion,
       "com.softwaremill.sttp.client3" %%% "zio" % sttpVersion,
+//      "com.softwaremill.sttp.client4" %%% "zio" % sttpVersion,
       "dev.zio" %%% "zio-json" % zioJsonVersion,
       "io.frontroute" %%% "frontroute" % frontrouteVersion // Brings in Laminar 17
     ),

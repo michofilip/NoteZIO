@@ -1,5 +1,6 @@
 package zote
 
+import sttp.tapir.server.interceptor.cors.CORSInterceptor
 import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.*
 import zio.http.Server
@@ -13,12 +14,14 @@ object MainApp extends ZIOAppDefault {
 
   private val app = for {
     _ <- FlywayService.run
-    
+
     routes <- HttpApi.routesZIO
     swaggerRoutes <- SwaggerApi.routesZIO
     port <- Server.install(
       ZioHttpInterpreter(
-        ZioHttpServerOptions.default
+        ZioHttpServerOptions.default.appendInterceptor(
+          CORSInterceptor.default
+        )
       ).toHttp(routes ++ swaggerRoutes)
     )
 

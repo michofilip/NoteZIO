@@ -2,8 +2,7 @@ package zote.endpoints
 
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.ztapir.*
-import sttp.tapir.{AnyEndpoint, path}
+import sttp.tapir.*
 import zio.*
 import zote.dto.Person
 import zote.dto.form.PersonForm

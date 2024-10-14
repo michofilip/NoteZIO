@@ -1,7 +1,6 @@
 package zote.endpoints
 
-import sttp.tapir.AnyEndpoint
-import sttp.tapir.ztapir.*
+import sttp.tapir.*
 
 trait HealthEndpoints extends Endpoints {
   val healthEndpoint = baseEndpoint
