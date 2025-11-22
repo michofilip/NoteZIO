@@ -13,7 +13,7 @@ object NotePersonRole {
 
   given JsonCodec[NotePersonRole] = JsonCodec[NotePersonRole](
     JsonEncoder[String].contramap(_.toString),
-    JsonDecoder[String].map(NotePersonRole.valueOf),
+    JsonDecoder[String].map(NotePersonRole.valueOf)
   )
 
   given Schema[NotePersonRole] = Schema.derivedEnumeration.defaultStringBased

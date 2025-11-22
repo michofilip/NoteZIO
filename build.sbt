@@ -1,22 +1,21 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 
-ThisBuild / scalaVersion := "3.5.1"
+ThisBuild / scalaVersion := "3.6.1"
 
-val zioVersion = "2.1.11"
-val zioJsonVersion = "0.7.3"
-val zioConfigVersion = "4.0.2"
-val zioLoggingVersion = "2.3.1"
-val zioPreludeVersion = "1.0.0-RC31"
+val zioVersion = "2.1.15"
+val zioJsonVersion = "0.7.21"
+val zioConfigVersion = "4.0.3"
+val zioLoggingVersion = "2.4.0"
+val zioPreludeVersion = "1.0.0-RC39"
 val slf4jVersion = "2.0.16"
-val quillVersion = "4.8.5"
+val quillVersion = "4.8.6"
 //val postgresqlVersion = "42.7.4"
 val h2Version = "2.3.232"
-val flywayVersion = "10.18.2"
-val quicklensVersion = "1.9.9"
-val tapirVersion = "1.11.7"
-val sttpVersion = "3.10.0"
+val flywayVersion = "11.3.2"
+val quicklensVersion = "1.9.12"
+val tapirVersion = "1.11.14"
+val sttpVersion = "3.10.3"
 //val sttpVersion = "4.0.0-M18"
-val testcontainersPostgresqlVersion = "0.10.0"
 val frontrouteVersion = "0.19.0"
 
 lazy val common = crossProject(JVMPlatform, JSPlatform)
@@ -70,8 +69,6 @@ lazy val server = (project in file("modules/server"))
       "com.h2database" % "h2" % h2Version,
       "org.flywaydb" % "flyway-core" % flywayVersion,
       "org.flywaydb" % "flyway-database-postgresql" % flywayVersion,
-      "io.github.scottweaver" %% "zio-2-0-testcontainers-postgresql" % testcontainersPostgresqlVersion,
-      "io.github.scottweaver" %% "zio-2-0-db-migration-aspect" % testcontainersPostgresqlVersion,
 // Other
       "com.softwaremill.quicklens" %% "quicklens" % quicklensVersion
     ),
