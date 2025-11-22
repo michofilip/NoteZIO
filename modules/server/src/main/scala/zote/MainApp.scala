@@ -15,14 +15,14 @@ object MainApp extends ZIOAppDefault {
   private val app = for {
     _ <- FlywayService.run
 
-    routes <- HttpApi.routesZIO
+    routes        <- HttpApi.routesZIO
     swaggerRoutes <- SwaggerApi.routesZIO
     port <- Server.install(
       ZioHttpInterpreter(
         ZioHttpServerOptions.default.appendInterceptor(
-          CORSInterceptor.default
-        )
-      ).toHttp(routes ++ swaggerRoutes)
+          CORSInterceptor.default,
+        ),
+      ).toHttp(routes ++ swaggerRoutes),
     )
 
     _ <- ZIO.logInfo("Welcome to Zote")
@@ -53,7 +53,7 @@ object MainApp extends ZIOAppDefault {
       ServerConfig.layer,
       SLF4JConfig.layer,
       DataSourceConfig.layer,
-      InitHelperImpl.layer
+      InitHelperImpl.layer,
 //      ZLayer.Debug.mermaid
     )
     .exitCode
