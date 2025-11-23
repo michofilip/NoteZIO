@@ -2,25 +2,27 @@ package zote.db.repositories
 
 import io.getquill.*
 import zio.*
+import zote.Ids.LabelId
 import zote.db.QuillContext
 import zote.db.model.LabelEntity
+import zote.db.repositories.includes.given
 import zote.exceptions.NotFoundException
 
 trait LabelRepository {
   def findAll: Task[List[LabelEntity]]
 
-  def findById(id: Long): Task[Option[LabelEntity]]
+  def findById(id: LabelId): Task[Option[LabelEntity]]
 
-  final def getById(id: Long): Task[LabelEntity] =
-    findById(id).someOrFail(NotFoundException(s"Label id: $id not found"))
+  final def getById(id: LabelId): Task[LabelEntity] =
+    findById(id).someOrFail(NotFoundException(s"Label id: ${id.value} not found"))
 
   def upsert(labelEntity: LabelEntity): Task[LabelEntity]
 
-  def delete(id: Long): Task[Unit]
+  def delete(id: LabelId): Task[Unit]
 }
 
 case class LabelRepositoryImpl(
-    private val quillContext: QuillContext
+    private val quillContext: QuillContext,
 ) extends LabelRepository {
 
   import quillContext.*
@@ -29,7 +31,7 @@ case class LabelRepositoryImpl(
     run(query[LabelEntity])
   }
 
-  override def findById(id: Long): Task[Option[LabelEntity]] = transaction {
+  override def findById(id: LabelId): Task[Option[LabelEntity]] = transaction {
     run(query[LabelEntity].filter(l => l.id == lift(id)))
       .map(_.headOption)
   }
@@ -38,7 +40,7 @@ case class LabelRepositoryImpl(
     transaction {
       for {
         id <-
-          if (labelEntity.id == 0) {
+          if (labelEntity.id.isZero) {
             run(insert(lift(labelEntity)))
           } else {
             run(update(lift(labelEntity)))
@@ -47,11 +49,11 @@ case class LabelRepositoryImpl(
       } yield label
     }
 
-  override def delete(id: Long): Task[Unit] = transaction {
+  override def delete(id: LabelId): Task[Unit] = transaction {
     run(
       query[LabelEntity]
         .filter(l => l.id == lift(id))
-        .delete
+        .delete,
     ).unit
   }
 

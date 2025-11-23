@@ -1,9 +1,10 @@
 package zote.dto.form
 
 import zio.json.JsonCodec
+import zote.Ids.PersonId
 import zote.enums.NotePersonRole
 
 case class NotePersonForm(
-  personId: Long,
-  role: NotePersonRole
-)derives JsonCodec
+    personId: PersonId,
+    role: NotePersonRole,
+) derives JsonCodec

@@ -10,7 +10,7 @@ import zote.dto.form.LabelForm
 trait LabelEndpoints extends Endpoints {
 
   val getAllEndpoint = baseEndpoint
-    .tag("label")
+    .tag("labels")
     .name("getAll")
     .description("getAll")
     .get
@@ -18,7 +18,7 @@ trait LabelEndpoints extends Endpoints {
     .out(jsonBody[List[Label]])
 
   val getByIdEndpoint = baseEndpoint
-    .tag("label")
+    .tag("labels")
     .name("getById")
     .description("getById")
     .get
@@ -26,7 +26,7 @@ trait LabelEndpoints extends Endpoints {
     .out(jsonBody[Label])
 
   val createEndpoint = baseEndpoint
-    .tag("label")
+    .tag("labels")
     .name("create")
     .description("create")
     .post
@@ -35,7 +35,7 @@ trait LabelEndpoints extends Endpoints {
     .out(jsonBody[Label])
 
   val updateEndpoint = baseEndpoint
-    .tag("label")
+    .tag("labels")
     .name("update")
     .description("update")
     .put
@@ -44,7 +44,7 @@ trait LabelEndpoints extends Endpoints {
     .out(jsonBody[Label])
 
   val deleteEndpoint = baseEndpoint
-    .tag("label")
+    .tag("labels")
     .name("delete")
     .description("delete")
     .delete

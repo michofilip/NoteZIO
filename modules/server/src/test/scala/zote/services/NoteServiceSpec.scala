@@ -2,6 +2,7 @@ package zote.services
 
 import zio.*
 import zio.test.*
+import zote.Ids.NoteId
 import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
 import zote.db.model.*
@@ -10,7 +11,7 @@ import zote.dto.*
 import zote.dto.form.{NoteForm, NotePersonForm}
 import zote.enums.{NotePersonRole, NoteStatus}
 import zote.exceptions.NotFoundException
-import zote.helpers.{DbHelper, DbHelperImpl, TestAspectUtils}
+import zote.helpers.{DbHelper, TestAspectUtils}
 
 object NoteServiceSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
@@ -23,48 +24,54 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "Note 1",
                 message = "Message 1",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
             noteEntity2 <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
                 message = "Message 2",
-                status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                status = NoteStatus.Draft,
+                parentId = None,
+              ),
             )
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             _ <- DbHelper.insertNoteLabel(
-              NoteLabelEntity(noteId = noteEntity1.id, labelId = labelEntity.id)
+              NoteLabelEntity(
+                noteId = noteEntity1.id,
+                labelId = labelEntity.id,
+              ),
             )
             _ <- DbHelper.insertNoteLabel(
-              NoteLabelEntity(noteId = noteEntity2.id, labelId = labelEntity.id)
+              NoteLabelEntity(
+                noteId = noteEntity2.id,
+                labelId = labelEntity.id,
+              ),
             )
 
             noteService <- ZIO.service[NoteService]
             noteHeaders <- noteService.getAll
           } yield assertTrue {
-            noteHeaders.size == 2
-            && noteHeaders.contains(
+            noteHeaders.size == 2 &&
+            noteHeaders.contains(
               NoteHeader(
                 id = noteEntity1.id,
                 title = noteEntity1.title,
                 status = noteEntity1.status,
                 labels = Some(
-                  List(Label(id = labelEntity.id, name = labelEntity.name))
-                )
-              )
-            )
-            && noteHeaders.contains(
+                  List(Label(id = labelEntity.id, name = labelEntity.name)),
+                ),
+              ),
+            ) &&
+            noteHeaders.contains(
               NoteHeader(
                 id = noteEntity2.id,
                 title = noteEntity2.title,
                 status = noteEntity2.status,
                 labels = Some(
-                  List(Label(id = labelEntity.id, name = labelEntity.name))
-                )
-              )
+                  List(Label(id = labelEntity.id, name = labelEntity.name)),
+                ),
+              ),
             )
           }
         },
@@ -75,7 +82,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
           } yield assertTrue {
             noteHeaders.isEmpty
           }
-        }
+        },
       ),
       suite("provides function 'getById' that")(
         test("returns Note if exists") {
@@ -85,43 +92,43 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "Note 1",
                 message = "Message 1",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
                 message = "Message 2",
                 status = NoteStatus.Ongoing,
-                parentId = Some(parentNoteEntity.id)
-              )
+                parentId = Some(parentNoteEntity.id),
+              ),
             )
             childNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 3",
                 message = "Message 3",
                 status = NoteStatus.Ongoing,
-                parentId = Some(noteEntity.id)
-              )
+                parentId = Some(noteEntity.id),
+              ),
             )
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
             _ <- DbHelper.insertNoteLabel(
               NoteLabelEntity(
                 noteId = noteEntity.id,
-                labelId = labelEntity.id
-              )
+                labelId = labelEntity.id,
+              ),
             )
             _ <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = noteEntity.id,
                 personId = personEntity.id,
-                role = NotePersonRole.Owner
-              )
+                role = NotePersonRole.Owner,
+              ),
             )
 
             noteService <- ZIO.service[NoteService]
-            note <- noteService.getById(noteEntity.id)
+            note        <- noteService.getById(noteEntity.id)
           } yield assertTrue {
             note == Note(
               header = NoteHeader(
@@ -129,26 +136,25 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = noteEntity.title,
                 status = noteEntity.status,
                 labels = Some(
-                  List(Label(id = labelEntity.id, name = labelEntity.name))
-                )
+                  List(Label(id = labelEntity.id, name = labelEntity.name)),
+                ),
               ),
               message = noteEntity.message,
               assignees = Some(
                 List(
                   NotePerson(
-                    person =
-                      Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner)
-                  )
-                )
+                    person = Person(id = personEntity.id, name = personEntity.name),
+                    roles = List(NotePersonRole.Owner),
+                  ),
+                ),
               ),
               parentNote = Some(
                 NoteHeader(
                   id = parentNoteEntity.id,
                   title = parentNoteEntity.title,
                   status = parentNoteEntity.status,
-                  labels = None
-                )
+                  labels = None,
+                ),
               ),
               childrenNotes = Some(
                 List(
@@ -156,27 +162,21 @@ object NoteServiceSpec extends ZIOSpecDefault {
                     id = childNoteEntity.id,
                     title = childNoteEntity.title,
                     status = childNoteEntity.status,
-                    labels = None
-                  )
-                )
-              )
+                    labels = None,
+                  ),
+                ),
+              ),
             )
           }
         },
         test("returns NotFoundException if not exists") {
           for {
             noteService <- ZIO.service[NoteService]
-            result <- noteService
-              .getById(-1)
-              .flip
-              .orElseFail(new Throwable())
+            result      <- noteService.getById(NoteId(-1)).exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Note id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Note id: -1 not found"))
           }
-        }
+        },
       ),
       suite("provides function 'create' that")(
         test("creates and returns Note") {
@@ -186,10 +186,10 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "Note 1",
                 message = "Message 1",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
 
             noteService <- ZIO.service[NoteService]
@@ -201,12 +201,12 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 assignees = Set(
                   NotePersonForm(
                     personId = personEntity.id,
-                    role = NotePersonRole.Owner
-                  )
+                    role = NotePersonRole.Owner,
+                  ),
                 ),
                 parentId = Some(parentNoteEntity.id),
-                labels = Set(labelEntity.id)
-              )
+                labels = Set(labelEntity.id),
+              ),
             )
           } yield assertTrue {
             note == Note(
@@ -215,31 +215,30 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "title",
                 status = NoteStatus.Ongoing,
                 labels = Some(
-                  List(Label(id = labelEntity.id, name = labelEntity.name))
-                )
+                  List(Label(id = labelEntity.id, name = labelEntity.name)),
+                ),
               ),
               message = "message",
               assignees = Some(
                 List(
                   NotePerson(
-                    person =
-                      Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner)
-                  )
-                )
+                    person = Person(id = personEntity.id, name = personEntity.name),
+                    roles = List(NotePersonRole.Owner),
+                  ),
+                ),
               ),
               parentNote = Some(
                 NoteHeader(
                   id = parentNoteEntity.id,
                   title = parentNoteEntity.title,
                   status = parentNoteEntity.status,
-                  labels = None
-                )
+                  labels = None,
+                ),
               ),
-              childrenNotes = None
+              childrenNotes = None,
             )
           }
-        }
+        },
       ),
       suite("provides function 'update' that")(
         test("updates and returns Note") {
@@ -249,18 +248,18 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "Note 1",
                 message = "Message 1",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
                 message = "Message 2",
                 status = NoteStatus.Ongoing,
-                parentId = Some(parentNoteEntity.id)
-              )
+                parentId = None,
+              ),
             )
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
 
             noteService <- ZIO.service[NoteService]
@@ -273,12 +272,12 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 assignees = Set(
                   NotePersonForm(
                     personId = personEntity.id,
-                    role = NotePersonRole.Owner
-                  )
+                    role = NotePersonRole.Owner,
+                  ),
                 ),
                 parentId = Some(parentNoteEntity.id),
-                labels = Set(labelEntity.id)
-              )
+                labels = Set(labelEntity.id),
+              ),
             )
           } yield assertTrue {
             note == Note(
@@ -287,28 +286,32 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "title",
                 status = NoteStatus.Complete,
                 labels = Some(
-                  List(Label(id = labelEntity.id, name = labelEntity.name))
-                )
+                  List(
+                    Label(
+                      id = labelEntity.id,
+                      name = labelEntity.name,
+                    ),
+                  ),
+                ),
               ),
               message = "message",
               assignees = Some(
                 List(
                   NotePerson(
-                    person =
-                      Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner)
-                  )
-                )
+                    person = Person(id = personEntity.id, name = personEntity.name),
+                    roles = List(NotePersonRole.Owner),
+                  ),
+                ),
               ),
               parentNote = Some(
                 NoteHeader(
                   id = parentNoteEntity.id,
                   title = parentNoteEntity.title,
                   status = parentNoteEntity.status,
-                  labels = None
-                )
+                  labels = None,
+                ),
               ),
-              childrenNotes = None
+              childrenNotes = None,
             )
           }
         },
@@ -317,25 +320,21 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteService <- ZIO.service[NoteService]
             result <- noteService
               .update(
-                -1,
+                NoteId(-1),
                 NoteForm(
                   title = "title",
                   message = "message",
                   status = NoteStatus.Ongoing,
                   assignees = Set(),
                   parentId = None,
-                  labels = Set()
-                )
+                  labels = Set(),
+                ),
               )
-              .flip
-              .orElseFail(new Throwable())
+              .exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Note id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Note id: -1 not found"))
           }
-        }
+        },
       ),
       suite("provides function 'delete' that")(
         test("deletes Label") {
@@ -345,63 +344,59 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 title = "Note 1",
                 message = "Message 1",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
                 message = "Message 2",
                 status = NoteStatus.Ongoing,
-                parentId = Some(parentNoteEntity.id)
-              )
+                parentId = Some(parentNoteEntity.id),
+              ),
             )
             _ <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 3",
                 message = "Message 3",
                 status = NoteStatus.Ongoing,
-                parentId = Some(noteEntity.id)
-              )
+                parentId = Some(noteEntity.id),
+              ),
             )
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
             _ <- DbHelper.insertNoteLabel(
               NoteLabelEntity(
                 noteId = noteEntity.id,
-                labelId = labelEntity.id
-              )
+                labelId = labelEntity.id,
+              ),
             )
             _ <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = noteEntity.id,
                 personId = personEntity.id,
-                role = NotePersonRole.Owner
-              )
+                role = NotePersonRole.Owner,
+              ),
             )
 
-            noteService <- ZIO.service[NoteService]
-            _ <- noteService.delete(noteEntity.id)
-            result <- noteService
-              .getById(noteEntity.id)
-              .fold(_ => true, _ => false)
-          } yield assertTrue(result)
+            noteService        <- ZIO.service[NoteService]
+            resultBeforeDelete <- noteService.getById(noteEntity.id).exit
+            _                  <- noteService.delete(noteEntity.id)
+            resultAfterDelete  <- noteService.getById(noteEntity.id).exit
+          } yield assertTrue {
+            resultBeforeDelete.isSuccess &&
+            resultAfterDelete.isFailure
+          }
         },
         test("returns NotFoundException if not exists") {
           for {
             noteService <- ZIO.service[NoteService]
-            result <- noteService
-              .delete(-1)
-              .flip
-              .orElseFail(new Throwable())
+            result      <- noteService.delete(NoteId(-1)).exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Note id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Note id: -1 not found"))
           }
-        }
-      )
+        },
+      ),
     )
       @@ TestAspectUtils.rollback
       @@ TestAspect.beforeAll(FlywayService.run)
@@ -419,6 +414,6 @@ object NoteServiceSpec extends ZIOSpecDefault {
     NoteLabelRepositoryImpl.layer,
     QuillContext.layer,
     DataSourceConfig.layer,
-    DbHelperImpl.layer
+    DbHelper.layer,
   )
 }

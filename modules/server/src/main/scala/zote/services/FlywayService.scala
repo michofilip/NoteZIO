@@ -19,7 +19,7 @@ object FlywayService {
 
 case class FlywayServiceImpl(
     private val flywayConfig: FlywayConfig,
-    private val dataSource: DataSource
+    private val dataSource: DataSource,
 ) extends FlywayService {
   override protected def run: Task[Unit] = ZIO
     .attemptUnsafe { _ =>

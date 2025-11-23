@@ -2,54 +2,51 @@ package zote.db.repositories
 
 import io.getquill.*
 import zio.*
+import zote.Ids.{NoteId, PersonId}
 import zote.db.QuillContext
 import zote.db.model.NotePersonEntity
 import zote.db.repositories.includes.given
 
 trait NotePersonRepository {
 
-  def findAllByNoteId(noteId: Long): Task[List[NotePersonEntity]]
+  def findAllByNoteId(noteId: NoteId): Task[List[NotePersonEntity]]
 
-  def findAllByPersonId(personId: Long): Task[List[NotePersonEntity]]
+  def findAllByPersonId(personId: PersonId): Task[List[NotePersonEntity]]
 
-  def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+  def insertAll(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
 
-  def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+  def deleteAll(ids: Seq[(NoteId, PersonId)]): Task[Unit]
 }
 
 case class NotePersonRepositoryImpl(
-    private val quillContext: QuillContext
+    private val quillContext: QuillContext,
 ) extends NotePersonRepository {
 
   import quillContext.*
 
-  override def findAllByNoteId(noteId: Long): Task[List[NotePersonEntity]] =
+  override def findAllByNoteId(noteId: NoteId): Task[List[NotePersonEntity]] =
     transaction {
       run(query[NotePersonEntity].filter(np => np.noteId == lift(noteId)))
     }
 
-  override def findAllByPersonId(personId: Long): Task[List[NotePersonEntity]] =
+  override def findAllByPersonId(personId: PersonId): Task[List[NotePersonEntity]] =
     transaction {
       run(query[NotePersonEntity].filter(np => np.personId == lift(personId)))
     }
 
-  override def insert(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
+  override def insertAll(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
     transaction {
       run(
-        liftQuery(notePersonEntities).foreach(np =>
-          query[NotePersonEntity].insertValue(np)
-        )
+        liftQuery(notePersonEntities).foreach(np => query[NotePersonEntity].insertValue(np)),
       ).unit
     }
 
-  override def delete(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
+  override def deleteAll(ids: Seq[(NoteId, PersonId)]): Task[Unit] =
     transaction {
       run {
-        liftQuery(notePersonEntities).foreach { npD =>
+        liftQuery(ids).foreach { case (noteId, personId) =>
           query[NotePersonEntity]
-            .filter(np =>
-              np.noteId == npD.noteId && np.personId == npD.personId && np.role == npD.role
-            )
+            .filter(np => np.noteId == noteId && np.personId == personId)
             .delete
         }
       }.unit

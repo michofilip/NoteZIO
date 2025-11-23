@@ -2,12 +2,12 @@ package zote.db.repositories
 
 import zio.*
 import zio.test.*
+import zote.Ids.{NoteId, PersonId}
 import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
 import zote.db.model.{NoteEntity, NotePersonEntity, PersonEntity}
-import zote.db.repositories.NoteLabelRepositorySpec.test
 import zote.enums.{NotePersonRole, NoteStatus}
-import zote.helpers.{DbHelper, DbHelperImpl, TestAspectUtils}
+import zote.helpers.{DbHelper, TestAspectUtils}
 import zote.services.{FlywayService, FlywayServiceImpl}
 
 object NotePersonRepositorySpec extends ZIOSpecDefault {
@@ -16,21 +16,21 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
     title = "Note 1",
     message = "Message 1",
     status = NoteStatus.Ongoing,
-    parentId = None
+    parentId = None,
   )
 
   private val note2 = NoteEntity(
     title = "Note 2",
     message = "Message 2",
     status = NoteStatus.Ongoing,
-    parentId = None
+    parentId = None,
   )
 
   private val note3 = NoteEntity(
     title = "Note 3",
     message = "Message 3",
     status = NoteStatus.Ongoing,
-    parentId = None
+    parentId = None,
   )
 
   private val person1 = PersonEntity(name = "Ala")
@@ -42,168 +42,147 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
       suite("provides function 'findAllByNoteId' that")(
         test("returns list of NotePersonEntities if some exist") {
           for {
-            note <- DbHelper.insertNote(note1)
+            note    <- DbHelper.insertNote(note1)
             person1 <- DbHelper.insertPerson(person1)
             person2 <- DbHelper.insertPerson(person2)
-            person3 <- DbHelper.insertPerson(person3)
             notePerson1 <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = note.id,
                 personId = person1.id,
-                role = NotePersonRole.Owner
-              )
+                role = NotePersonRole.Owner,
+              ),
             )
             notePerson2 <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = note.id,
                 personId = person2.id,
-                role = NotePersonRole.Maintainer
-              )
-            )
-            notePerson3 <- DbHelper.insertNotePerson(
-              NotePersonEntity(
-                noteId = note.id,
-                personId = person3.id,
-                role = NotePersonRole.Observer
-              )
+                role = NotePersonRole.Maintainer,
+              ),
             )
 
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            notePersonEntities <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntities   <- notePersonRepository.findAllByNoteId(note.id)
           } yield assertTrue {
-            notePersonEntities.size == 3
-            && notePersonEntities.contains(notePerson1)
-            && notePersonEntities.contains(notePerson2)
-            && notePersonEntities.contains(notePerson3)
+            notePersonEntities.size == 2 &&
+            notePersonEntities.contains(notePerson1) &&
+            notePersonEntities.contains(notePerson2)
           }
         },
         test("returns empty list if none exist") {
           for {
             note <- DbHelper.insertNote(note1)
-            _ <- DbHelper.insertPerson(person1)
-            _ <- DbHelper.insertPerson(person2)
-            _ <- DbHelper.insertPerson(person3)
+
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            notePersonEntities <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntities   <- notePersonRepository.findAllByNoteId(note.id)
           } yield assertTrue {
             notePersonEntities.isEmpty
           }
-        }
+        },
       ),
       suite("provides function 'findAllByPersonId' that")(
         test("returns list of NotePersonEntities if some exist") {
           for {
-            note1 <- DbHelper.insertNote(note1)
-            note2 <- DbHelper.insertNote(note2)
-            note3 <- DbHelper.insertNote(note3)
+            note1  <- DbHelper.insertNote(note1)
+            note2  <- DbHelper.insertNote(note2)
             person <- DbHelper.insertPerson(person1)
             notePerson1 <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = note1.id,
                 personId = person.id,
-                role = NotePersonRole.Owner
-              )
+                role = NotePersonRole.Owner,
+              ),
             )
             notePerson2 <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = note2.id,
                 personId = person.id,
-                role = NotePersonRole.Maintainer
-              )
-            )
-            notePerson3 <- DbHelper.insertNotePerson(
-              NotePersonEntity(
-                noteId = note3.id,
-                personId = person.id,
-                role = NotePersonRole.Observer
-              )
+                role = NotePersonRole.Maintainer,
+              ),
             )
 
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            notePersonEntities <- notePersonRepository.findAllByPersonId(
-              person.id
-            )
+            notePersonEntities   <- notePersonRepository.findAllByPersonId(person.id)
           } yield assertTrue {
-            notePersonEntities.size == 3
-            && notePersonEntities.contains(notePerson1)
-            && notePersonEntities.contains(notePerson2)
-            && notePersonEntities.contains(notePerson3)
+            notePersonEntities.size == 2 &&
+            notePersonEntities.contains(notePerson1) &&
+            notePersonEntities.contains(notePerson2)
           }
         },
         test("returns empty list if none exist") {
           for {
-            _ <- DbHelper.insertNote(note1)
-            _ <- DbHelper.insertNote(note2)
-            _ <- DbHelper.insertNote(note3)
+            _      <- DbHelper.insertNote(note1)
+            _      <- DbHelper.insertNote(note2)
+            _      <- DbHelper.insertNote(note3)
             person <- DbHelper.insertPerson(person1)
 
             notePersonRepository <- ZIO.service[NotePersonRepository]
             notePersonEntities <- notePersonRepository.findAllByPersonId(
-              person.id
+              person.id,
             )
           } yield assertTrue {
             notePersonEntities.isEmpty
           }
-        }
+        },
       ),
-      suite("provides function 'insert' that")(
+      suite("provides function 'insertAll' that")(
         test("inserts list of NotePersonEntities") {
           for {
-            note <- DbHelper.insertNote(note1)
+            note   <- DbHelper.insertNote(note1)
             person <- DbHelper.insertPerson(person1)
             notePerson = NotePersonEntity(
               noteId = note.id,
               personId = person.id,
-              role = NotePersonRole.Owner
+              role = NotePersonRole.Owner,
             )
 
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            _ <- notePersonRepository.insert(List(notePerson))
+            _                    <- notePersonRepository.insertAll(List(notePerson))
 
-            notePersonEntitiesByNoteId <- notePersonRepository
-              .findAllByNoteId(note.id)
-            notePersonEntitiesByPersonId <- notePersonRepository
-              .findAllByPersonId(person.id)
+            notePersonEntitiesByNoteId   <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntitiesByPersonId <- notePersonRepository.findAllByPersonId(person.id)
           } yield assertTrue {
-            notePersonEntitiesByNoteId.contains(notePerson)
-            && notePersonEntitiesByPersonId.contains(notePerson)
+            notePersonEntitiesByNoteId.size == 1 &&
+            notePersonEntitiesByNoteId.contains(notePerson) &&
+            notePersonEntitiesByPersonId.size == 1 &&
+            notePersonEntitiesByPersonId.contains(notePerson)
           }
-        }
+        },
       ),
-      suite("provides function 'delete' that")(
-        test("deletes list of NotePersonEntities") {
+      suite("provides function 'deleteAll' that")(
+        test("deletes list of NotePersonEntities if exist") {
           for {
-            note <- DbHelper.insertNote(note1)
+            note   <- DbHelper.insertNote(note1)
             person <- DbHelper.insertPerson(person1)
             notePerson <- DbHelper.insertNotePerson(
               NotePersonEntity(
                 noteId = note.id,
                 personId = person.id,
-                role = NotePersonRole.Owner
-              )
+                role = NotePersonRole.Owner,
+              ),
             )
 
-            notePersonRepository <- ZIO.service[NotePersonRepository]
-            _ <- notePersonRepository.delete(
-              List(
-                NotePersonEntity(
-                  noteId = note.id,
-                  personId = person.id,
-                  role = NotePersonRole.Owner
-                )
-              )
-            )
-
-            notePersonEntitiesByNoteId <- notePersonRepository
-              .findAllByNoteId(note.id)
-            notePersonEntitiesByPersonId <- notePersonRepository
-              .findAllByPersonId(person.id)
+            notePersonRepository                     <- ZIO.service[NotePersonRepository]
+            notePersonEntitiesByNoteIdBeforeDelete   <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntitiesByPersonIdBeforeDelete <- notePersonRepository.findAllByPersonId(person.id)
+            _                                        <- notePersonRepository.deleteAll(List((note.id, person.id)))
+            notePersonEntitiesByNoteIdAfterDelete    <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntitiesByPersonIdAfterDelete  <- notePersonRepository.findAllByPersonId(person.id)
           } yield assertTrue {
-            notePersonEntitiesByNoteId.isEmpty
-            && notePersonEntitiesByPersonId.isEmpty
+            notePersonEntitiesByNoteIdBeforeDelete.nonEmpty &&
+            notePersonEntitiesByNoteIdAfterDelete.isEmpty &&
+            notePersonEntitiesByPersonIdBeforeDelete.nonEmpty &&
+            notePersonEntitiesByPersonIdAfterDelete.isEmpty
           }
-        }
-      )
+        },
+        test("does nothing if NotePersonEntities not exist") {
+          for {
+            notePersonRepository <- ZIO.service[NotePersonRepository]
+            result               <- notePersonRepository.deleteAll(List((NoteId(-1), PersonId(-1)))).exit
+          } yield assertTrue {
+            result.isSuccess
+          }
+        },
+      ),
     )
       @@ TestAspectUtils.rollback
       @@ TestAspect.beforeAll(FlywayService.run)
@@ -214,6 +193,6 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
     NotePersonRepositoryImpl.layer,
     QuillContext.layer,
     DataSourceConfig.layer,
-    DbHelperImpl.layer
+    DbHelper.layer,
   )
 }

@@ -6,21 +6,20 @@ import zote.db.QuillContext
 
 object TestAspectUtils {
   private case class TransactionRollbackSuccessException(
-      testSuccess: TestSuccess
+      testSuccess: TestSuccess,
   ) extends RuntimeException
 
   private case class TransactionRollbackFailureException[E](
-      testFailure: TestFailure[E]
+      testFailure: TestFailure[E],
   ) extends RuntimeException
 
-  val rollback
-      : TestAspect.PerTest[Nothing, QuillContext, Throwable, Throwable] =
+  val rollback: TestAspect.PerTest[Nothing, QuillContext, Throwable, Throwable] =
     new TestAspect.PerTest {
       override def perTest[
           R >: Nothing <: QuillContext,
-          E >: Throwable <: Throwable
+          E >: Throwable <: Throwable,
       ](
-          test: ZIO[R, TestFailure[E], TestSuccess]
+          test: ZIO[R, TestFailure[E], TestSuccess],
       )(implicit trace: Trace): ZIO[R, TestFailure[E], TestSuccess] = {
         for {
           quillContext <- ZIO.service[QuillContext]
@@ -28,7 +27,7 @@ object TestAspectUtils {
             .transaction {
               test.foldZIO(
                 tf => ZIO.fail(TransactionRollbackFailureException(tf)),
-                ts => ZIO.fail(TransactionRollbackSuccessException(ts))
+                ts => ZIO.fail(TransactionRollbackSuccessException(ts)),
               )
             }
             .flip

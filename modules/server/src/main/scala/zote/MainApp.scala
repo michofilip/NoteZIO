@@ -53,7 +53,7 @@ object MainApp extends ZIOAppDefault {
       ServerConfig.layer,
       SLF4JConfig.layer,
       DataSourceConfig.layer,
-      InitHelperImpl.layer,
+      InitHelper.layer,
 //      ZLayer.Debug.mermaid
     )
     .exitCode

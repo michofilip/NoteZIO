@@ -3,11 +3,12 @@ package zote.controllers
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
+import zote.Ids.LabelId
 import zote.endpoints.LabelEndpoints
 import zote.services.LabelService
 
 class LabelController(
-    private val labelService: LabelService
+    private val labelService: LabelService,
 ) extends Controller
     with LabelEndpoints {
 
@@ -16,7 +17,7 @@ class LabelController(
   }
 
   private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-    labelService.getById(id)
+    labelService.getById(LabelId(id))
   }
 
   private val create = createEndpoint.zServerLogic[Any] { labelForm =>
@@ -24,11 +25,11 @@ class LabelController(
   }
 
   private val update = updateEndpoint.zServerLogic[Any] { (id, labelForm) =>
-    labelService.update(id, labelForm)
+    labelService.update(LabelId(id), labelForm)
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    labelService.delete(id)
+    labelService.delete(LabelId(id))
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(
@@ -36,7 +37,7 @@ class LabelController(
     getById,
     create,
     update,
-    delete
+    delete,
   )
 }
 

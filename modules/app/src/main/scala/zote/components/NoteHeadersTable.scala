@@ -1,6 +1,7 @@
 package zote.components
 
 import com.raquo.laminar.api.L.{*, given}
+import zote.Ids.NoteId
 import zote.dto.NoteHeader
 
 object NoteHeadersTable {
@@ -13,7 +14,7 @@ object NoteHeadersTable {
     table(
       renderTableHeader(),
       renderTableBody(noteHeaders),
-      renderTableFooter()
+      renderTableFooter(),
     )
   }
 
@@ -22,8 +23,8 @@ object NoteHeadersTable {
       tr(
         th("Title"),
         th("Status"),
-        th("Labels")
-      )
+        th("Labels"),
+      ),
     )
   }
 
@@ -31,7 +32,7 @@ object NoteHeadersTable {
     tbody(
       children <-- noteHeaders.split(_.id) { case (id, _, noteHeader) =>
         renderRow(id, noteHeader)
-      }
+      },
     )
   }
 
@@ -39,13 +40,13 @@ object NoteHeadersTable {
     tfoot(
       th("Title"),
       th("Status"),
-      th("Labels")
+      th("Labels"),
     )
   }
 
   private def renderRow(
-      id: Long,
-      noteHeader: Signal[NoteHeader]
+      id: NoteId,
+      noteHeader: Signal[NoteHeader],
   ) = {
     val labels = noteHeader.map(_.labels.getOrElse(List.empty))
 
@@ -53,13 +54,13 @@ object NoteHeadersTable {
       td(
         a(
           href <-- noteHeader.map(noteHeader => s"/notes/${noteHeader.id}"),
-          child <-- noteHeader.map(_.title)
-        )
+          child <-- noteHeader.map(_.title),
+        ),
       ),
       td(child <-- noteHeader.map(_.status.toString)),
       td(
-        Labels(labels)
-      )
+        Labels(labels),
+      ),
     )
   }
 }

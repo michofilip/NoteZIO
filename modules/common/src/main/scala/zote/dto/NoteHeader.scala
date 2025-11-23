@@ -1,11 +1,12 @@
 package zote.dto
 
 import zio.json.JsonCodec
+import zote.Ids.NoteId
 import zote.enums.NoteStatus
 
 case class NoteHeader(
-  id: Long,
-  title: String,
-  status: NoteStatus,
-  labels: Option[List[Label]],
-)derives JsonCodec
+    id: NoteId,
+    title: String,
+    status: NoteStatus,
+    labels: Option[List[Label]],
+) derives JsonCodec

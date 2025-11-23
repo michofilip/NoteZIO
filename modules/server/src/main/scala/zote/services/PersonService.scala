@@ -2,6 +2,7 @@ package zote.services
 
 import com.softwaremill.quicklens.*
 import zio.*
+import zote.Ids.PersonId
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
 import zote.db.repositories.{NotePersonRepository, PersonRepository}
@@ -12,19 +13,19 @@ import zote.dto.validation.Validator
 trait PersonService {
   def getAll: Task[List[Person]]
 
-  def getById(id: Long): Task[Person]
+  def getById(id: PersonId): Task[Person]
 
   def create(personForm: PersonForm): Task[Person]
 
-  def update(id: Long, personForm: PersonForm): Task[Person]
+  def update(id: PersonId, personForm: PersonForm): Task[Person]
 
-  def delete(id: Long): Task[Unit]
+  def delete(id: PersonId): Task[Unit]
 }
 
 case class PersonServiceImpl(
     private val personRepository: PersonRepository,
     private val notePersonRepository: NotePersonRepository,
-    private val quillContext: QuillContext
+    private val quillContext: QuillContext,
 ) extends PersonService {
 
   import quillContext.*
@@ -35,7 +36,7 @@ case class PersonServiceImpl(
     }
   }
 
-  override def getById(id: Long): Task[Person] = transaction {
+  override def getById(id: PersonId): Task[Person] = transaction {
     personRepository.getById(id).flatMap(toPerson)
   }
 
@@ -49,10 +50,10 @@ case class PersonServiceImpl(
     } yield person
   }
 
-  override def update(id: Long, personForm: PersonForm): Task[Person] =
+  override def update(id: PersonId, personForm: PersonForm): Task[Person] =
     transaction {
       for {
-        _ <- Validator.validateZIO(personForm)
+        _            <- Validator.validateZIO(personForm)
         personEntity <- personRepository.getById(id)
         personEntity <- personRepository.upsert {
           personEntity.modify(_.name).setTo(personForm.name)
@@ -61,12 +62,12 @@ case class PersonServiceImpl(
       } yield person
     }
 
-  override def delete(id: Long): Task[Unit] = transaction {
+  override def delete(id: PersonId): Task[Unit] = transaction {
     for {
-      _ <- personRepository.getById(id)
+      _                  <- personRepository.getById(id)
       notePersonEntities <- notePersonRepository.findAllByPersonId(id)
       _ <- notePersonRepository
-        .delete(notePersonEntities)
+        .deleteAll(notePersonEntities.map(entity => (entity.noteId, entity.personId)))
         .unless(notePersonEntities.isEmpty)
       _ <- personRepository.delete(id)
     } yield ()
@@ -76,7 +77,7 @@ case class PersonServiceImpl(
     ZIO.succeed {
       Person(
         id = personEntity.id,
-        name = personEntity.name
+        name = personEntity.name,
       )
     }
   }

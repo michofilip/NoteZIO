@@ -1,8 +1,9 @@
 package zote.dto
 
 import zio.json.JsonCodec
+import zote.Ids.PersonId
 
 case class Person(
-  id: Long,
-  name: String
-)derives JsonCodec
+    id: PersonId,
+    name: String,
+) derives JsonCodec

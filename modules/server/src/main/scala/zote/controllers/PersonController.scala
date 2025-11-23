@@ -3,11 +3,12 @@ package zote.controllers
 import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
+import zote.Ids.PersonId
 import zote.endpoints.PersonEndpoints
 import zote.services.PersonService
 
 class PersonController(
-    private val personService: PersonService
+    private val personService: PersonService,
 ) extends Controller
     with PersonEndpoints {
 
@@ -16,7 +17,7 @@ class PersonController(
   }
 
   private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-    personService.getById(id)
+    personService.getById(PersonId(id))
   }
 
   private val create = createEndpoint.zServerLogic[Any] { personsForm =>
@@ -24,11 +25,11 @@ class PersonController(
   }
 
   private val update = updateEndpoint.zServerLogic[Any] { (id, personsForm) =>
-    personService.update(id, personsForm)
+    personService.update(PersonId(id), personsForm)
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    personService.delete(id)
+    personService.delete(PersonId(id))
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(
@@ -36,7 +37,7 @@ class PersonController(
     getById,
     create,
     update,
-    delete
+    delete,
   )
 }
 

@@ -9,7 +9,7 @@ object SwaggerApi {
       endpoints <- HttpApi.endpointsZIO
       routes <- ZIO.succeed(
         SwaggerInterpreter()
-          .fromEndpoints[Task](endpoints, "Zote", "0.1.0-SNAPSHOT")
+          .fromEndpoints[Task](endpoints, "Zote", "0.1.0-SNAPSHOT"),
       )
     } yield routes
   }

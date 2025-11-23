@@ -1,6 +1,7 @@
 package zote.components
 
 import com.raquo.laminar.api.L.{*, given}
+import zote.Ids.PersonId
 import zote.dto.Person
 
 object PersonsTable {
@@ -13,15 +14,15 @@ object PersonsTable {
     table(
       renderTableHeader(),
       renderTableBody(persons),
-      renderTableFooter()
+      renderTableFooter(),
     )
   }
 
   private def renderTableHeader() = {
     thead(
       tr(
-        th("Name")
-      )
+        th("Name"),
+      ),
     )
   }
 
@@ -29,27 +30,27 @@ object PersonsTable {
     tbody(
       children <-- persons.split(_.id) { case (id, _, person) =>
         renderRow(id, person)
-      }
+      },
     )
   }
 
   private def renderTableFooter() = {
     tfoot(
-      th("Name")
+      th("Name"),
     )
   }
 
   private def renderRow(
-      id: Long,
-      person: Signal[Person]
+      id: PersonId,
+      person: Signal[Person],
   ) = {
     tr(
       td(
         a(
-          href <-- person.map(person => s"/persons/${person.id}"),
-          child <-- person.map(_.name)
-        )
-      )
+          href <-- person.map(person => s"/persons/${person.id.value}"),
+          child <-- person.map(_.name),
+        ),
+      ),
     )
   }
 }

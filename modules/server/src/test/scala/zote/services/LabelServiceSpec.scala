@@ -2,6 +2,7 @@ package zote.services
 
 import zio.*
 import zio.test.*
+import zote.Ids.LabelId
 import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
 import zote.db.model.{LabelEntity, NoteEntity, NoteLabelEntity}
@@ -10,7 +11,7 @@ import zote.dto.Label
 import zote.dto.form.LabelForm
 import zote.enums.NoteStatus
 import zote.exceptions.NotFoundException
-import zote.helpers.{DbHelper, DbHelperImpl, TestAspectUtils}
+import zote.helpers.{DbHelper, TestAspectUtils}
 
 object LabelServiceSpec extends ZIOSpecDefault {
 
@@ -23,82 +24,75 @@ object LabelServiceSpec extends ZIOSpecDefault {
             labelEntity2 <- DbHelper.insertLabel(LabelEntity(name = "Green"))
 
             labelService <- ZIO.service[LabelService]
-            labels <- labelService.getAll
+            labels       <- labelService.getAll
           } yield assertTrue {
-            labels.size == 2
-            && labels.contains(
-              Label(id = labelEntity1.id, name = labelEntity1.name)
-            )
-            && labels.contains(
-              Label(id = labelEntity2.id, name = labelEntity2.name)
-            )
+            labels.size == 2 &&
+            labels.contains(Label(id = labelEntity1.id, name = labelEntity1.name)) &&
+            labels.contains(Label(id = labelEntity2.id, name = labelEntity2.name))
           }
         },
         test("returns empty list if none exist") {
           for {
             labelService <- ZIO.service[LabelService]
-            labels <- labelService.getAll
+            labels       <- labelService.getAll
           } yield assertTrue {
             labels.isEmpty
           }
-        }
+        },
       ),
       suite("provides function 'getById' that")(
         test("returns Label if exists") {
           for {
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             labelService <- ZIO.service[LabelService]
-            label <- labelService.getById(labelEntity.id)
-          } yield assertTrue(label.name == labelEntity.name)
+            label        <- labelService.getById(labelEntity.id)
+          } yield assertTrue {
+            label.id == labelEntity.id &&
+            label.name == labelEntity.name
+          }
         },
         test("returns NotFoundException if not exists") {
           for {
             labelService <- ZIO.service[LabelService]
-            result <- labelService
-              .getById(-1)
-              .flip
-              .orElseFail(new Throwable())
+            result       <- labelService.getById(LabelId(-1)).exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Label id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Label id: -1 not found"))
           }
-        }
+        },
       ),
       suite("provides function 'create' that")(
         test("creates and returns Label") {
           for {
             labelService <- ZIO.service[LabelService]
-            label <- labelService.create(LabelForm(name = "Red"))
-          } yield assertTrue(label.name == "Red")
-        }
+            label        <- labelService.create(LabelForm(name = "Red"))
+          } yield assertTrue {
+            !label.id.isZero &&
+            label.name == "Red"
+          }
+        },
       ),
       suite("provides function 'update' that")(
         test("updates and returns Label") {
           for {
-            labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
+            labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             labelService <- ZIO.service[LabelService]
             label <- labelService.update(
               labelEntity.id,
-              LabelForm(name = "Redder")
+              LabelForm(name = "Green"),
             )
-          } yield assertTrue(label.name == "Redder")
+          } yield assertTrue {
+            label.id == labelEntity.id &&
+            label.name == "Green"
+          }
         },
         test("returns NotFoundException if not exists") {
           for {
             labelService <- ZIO.service[LabelService]
-            result <- labelService
-              .update(-1, LabelForm(name = "Redder"))
-              .flip
-              .orElseFail(new Throwable())
+            result       <- labelService.update(LabelId(-1), LabelForm(name = "Red")).exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Label id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Label id: -1 not found"))
           }
-        }
+        },
       ),
       suite("provides function 'delete' that")(
         test("deletes Label") {
@@ -106,38 +100,34 @@ object LabelServiceSpec extends ZIOSpecDefault {
             labelEntity <- DbHelper.insertLabel(LabelEntity(name = "Red"))
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
-                title = "Note 1",
-                message = "Message 1",
+                title = "title",
+                message = "message",
                 status = NoteStatus.Ongoing,
-                parentId = None
-              )
+                parentId = None,
+              ),
             )
             noteLabelEntity <- DbHelper.insertNoteLabel(
-              NoteLabelEntity(noteId = noteEntity.id, labelId = labelEntity.id)
+              NoteLabelEntity(noteId = noteEntity.id, labelId = labelEntity.id),
             )
 
-            labelService <- ZIO.service[LabelService]
-            _ <- labelService.delete(labelEntity.id)
-            result <- labelService
-              .getById(labelEntity.id)
-              .fold(_ => true, _ => false)
-          } yield assertTrue(result)
+            labelService       <- ZIO.service[LabelService]
+            resultBeforeDelete <- labelService.getById(labelEntity.id).exit
+            _                  <- labelService.delete(labelEntity.id)
+            resultAfterDelete  <- labelService.getById(labelEntity.id).exit
+          } yield assertTrue {
+            resultBeforeDelete.isSuccess &&
+            resultAfterDelete.isFailure
+          }
         },
         test("returns NotFoundException if not exists") {
           for {
             labelService <- ZIO.service[LabelService]
-            result <- labelService
-              .delete(-1)
-              .flip
-              .orElseFail(new Throwable())
+            result       <- labelService.delete(LabelId(-1)).exit
           } yield assertTrue {
-            result match
-              case e: NotFoundException =>
-                e.getMessage == "Label id: -1 not found"
-              case _ => false
+            result == Exit.fail(NotFoundException("Label id: -1 not found"))
           }
-        }
-      )
+        },
+      ),
     )
       @@ TestAspectUtils.rollback
       @@ TestAspect.beforeAll(FlywayService.run)
@@ -150,6 +140,6 @@ object LabelServiceSpec extends ZIOSpecDefault {
     NoteLabelRepositoryImpl.layer,
     QuillContext.layer,
     DataSourceConfig.layer,
-    DbHelperImpl.layer
+    DbHelper.layer,
   )
 }

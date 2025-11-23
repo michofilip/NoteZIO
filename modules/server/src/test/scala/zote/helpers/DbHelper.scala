@@ -1,75 +1,48 @@
 package zote.helpers
 
-import com.softwaremill.quicklens.modify
 import io.getquill.*
 import zio.*
+import zote.Ids.{LabelId, NoteId, PersonId}
 import zote.db.QuillContext
 import zote.db.model.*
 import zote.db.repositories.includes.given
 
-trait DbHelper {
-  def insertPerson(personEntity: PersonEntity): Task[PersonEntity]
-  def insertLabel(labelEntity: LabelEntity): Task[LabelEntity]
-  def insertNote(noteEntity: NoteEntity): Task[NoteEntity]
-  def insertNoteLabel(noteLabelEntity: NoteLabelEntity): Task[NoteLabelEntity]
-  def insertNotePerson(
-      notePersonEntity: NotePersonEntity
-  ): Task[NotePersonEntity]
-}
-
-object DbHelper {
-  def insertPerson(personEntity: PersonEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertPerson(personEntity))
-
-  def insertLabel(labelEntity: LabelEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertLabel(labelEntity))
-
-  def insertNote(noteEntity: NoteEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertNote(noteEntity))
-
-  def insertNoteLabel(noteLabelEntity: NoteLabelEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertNoteLabel(noteLabelEntity))
-
-  def insertNotePerson(notePersonEntity: NotePersonEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertNotePerson(notePersonEntity))
-}
-
-case class DbHelperImpl(
-    private val quillContext: QuillContext
-) extends DbHelper {
+case class DbHelper(
+    private val quillContext: QuillContext,
+) {
 
   import quillContext.*
 
-  override def insertPerson(personEntity: PersonEntity): Task[PersonEntity] =
+  def insertPerson(personEntity: PersonEntity): Task[PersonEntity] =
     transaction {
       run(insertPersonQuery(lift(personEntity)))
         .map(_.head)
-        .map(id => personEntity.modify(_.id).setTo(id))
+        .map(id => personEntity.copy(id = PersonId(id)))
     }
 
-  override def insertLabel(labelEntity: LabelEntity): Task[LabelEntity] =
+  def insertLabel(labelEntity: LabelEntity): Task[LabelEntity] =
     transaction {
       run(insertLabelQuery(lift(labelEntity)))
         .map(_.head)
-        .map(id => labelEntity.modify(_.id).setTo(id))
+        .map(id => labelEntity.copy(id = LabelId(id)))
     }
 
-  override def insertNote(noteEntity: NoteEntity): Task[NoteEntity] =
+  def insertNote(noteEntity: NoteEntity): Task[NoteEntity] =
     transaction {
       run(insertNoteQuery(lift(noteEntity)))
         .map(_.head)
-        .map(id => noteEntity.modify(_.id).setTo(id))
+        .map(id => noteEntity.copy(id = NoteId(id)))
     }
 
-  override def insertNoteLabel(
-      noteLabelEntity: NoteLabelEntity
+  def insertNoteLabel(
+      noteLabelEntity: NoteLabelEntity,
   ): Task[NoteLabelEntity] = transaction {
     run(insertNoteLabelQuery(lift(noteLabelEntity)))
       .as(noteLabelEntity)
   }
 
-  override def insertNotePerson(
-      notePersonEntity: NotePersonEntity
+  def insertNotePerson(
+      notePersonEntity: NotePersonEntity,
   ): Task[NotePersonEntity] = transaction {
     run(insertNotePersonQuery(lift(notePersonEntity)))
       .as(notePersonEntity)
@@ -108,25 +81,38 @@ case class DbHelperImpl(
       .as[Query[Long]]
   }
 
-  private inline def insertNoteLabelQuery = quote {
-    (noteLabelEntity: NoteLabelEntity) =>
-      sql"""
+  private inline def insertNoteLabelQuery = quote { (noteLabelEntity: NoteLabelEntity) =>
+    sql"""
       INSERT INTO note_label(note_id,label_id)
       VALUES (${noteLabelEntity.noteId},${noteLabelEntity.labelId})
     """
-        .as[Insert[Any]]
+      .as[Insert[Any]]
   }
 
-  private inline def insertNotePersonQuery = quote {
-    (notePersonEntity: NotePersonEntity) =>
-      sql"""
+  private inline def insertNotePersonQuery = quote { (notePersonEntity: NotePersonEntity) =>
+    sql"""
       INSERT INTO note_person(note_id,person_id,role) 
       VALUES (${notePersonEntity.noteId},${notePersonEntity.personId},${notePersonEntity.role})
     """
-        .as[Insert[Any]]
+      .as[Insert[Any]]
   }
 }
 
-object DbHelperImpl {
-  lazy val layer = ZLayer.derive[DbHelperImpl]
+object DbHelper {
+  lazy val layer = ZLayer.derive[DbHelper]
+
+  def insertPerson(personEntity: PersonEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertPerson(personEntity))
+
+  def insertLabel(labelEntity: LabelEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertLabel(labelEntity))
+
+  def insertNote(noteEntity: NoteEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertNote(noteEntity))
+
+  def insertNoteLabel(noteLabelEntity: NoteLabelEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertNoteLabel(noteLabelEntity))
+
+  def insertNotePerson(notePersonEntity: NotePersonEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertNotePerson(notePersonEntity))
 }

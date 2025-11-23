@@ -2,25 +2,27 @@ package zote.db.repositories
 
 import io.getquill.*
 import zio.*
+import zote.Ids.PersonId
 import zote.db.QuillContext
 import zote.db.model.PersonEntity
+import zote.db.repositories.includes.given
 import zote.exceptions.NotFoundException
 
 trait PersonRepository {
   def findAll: Task[List[PersonEntity]]
 
-  def findById(id: Long): Task[Option[PersonEntity]]
+  def findById(id: PersonId): Task[Option[PersonEntity]]
 
-  final def getById(id: Long): Task[PersonEntity] =
-    findById(id).someOrFail(NotFoundException(s"Person id: $id not found"))
+  final def getById(id: PersonId): Task[PersonEntity] =
+    findById(id).someOrFail(NotFoundException(s"Person id: ${id.value} not found"))
 
   def upsert(personEntity: PersonEntity): Task[PersonEntity]
 
-  def delete(id: Long): Task[Unit]
+  def delete(id: PersonId): Task[Unit]
 }
 
 case class PersonRepositoryImpl(
-    private val quillContext: QuillContext
+    private val quillContext: QuillContext,
 ) extends PersonRepository {
 
   import quillContext.*
@@ -29,7 +31,7 @@ case class PersonRepositoryImpl(
     run(query[PersonEntity])
   }
 
-  override def findById(id: Long): Task[Option[PersonEntity]] = transaction {
+  override def findById(id: PersonId): Task[Option[PersonEntity]] = transaction {
     run(query[PersonEntity].filter(p => p.id == lift(id)))
       .map(_.headOption)
   }
@@ -38,7 +40,7 @@ case class PersonRepositoryImpl(
     transaction {
       for {
         id <-
-          if (personEntity.id == 0) {
+          if (personEntity.id.isZero) {
             run(insert(lift(personEntity)))
           } else {
             run(update(lift(personEntity)))
@@ -47,7 +49,7 @@ case class PersonRepositoryImpl(
       } yield person
     }
 
-  override def delete(id: Long): Task[Unit] = transaction {
+  override def delete(id: PersonId): Task[Unit] = transaction {
     run {
       query[PersonEntity]
         .filter(p => p.id == lift(id))
