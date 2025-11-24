@@ -22,7 +22,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteEntity1 <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -30,7 +30,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteEntity2 <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
-                message = "Message 2",
+                message = Some("Message 2"),
                 status = NoteStatus.Draft,
                 parentId = None,
               ),
@@ -90,7 +90,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             parentNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -98,7 +98,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
-                message = "Message 2",
+                message = Some("Message 2"),
                 status = NoteStatus.Ongoing,
                 parentId = Some(parentNoteEntity.id),
               ),
@@ -106,7 +106,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             childNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 3",
-                message = "Message 3",
+                message = Some("Message 3"),
                 status = NoteStatus.Ongoing,
                 parentId = Some(noteEntity.id),
               ),
@@ -184,7 +184,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             parentNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -196,7 +196,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             note <- noteService.create(
               NoteForm(
                 title = "title",
-                message = "message",
+                message = Some("message"),
                 status = NoteStatus.Ongoing,
                 assignees = Set(
                   NotePersonForm(
@@ -218,7 +218,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                   List(Label(id = labelEntity.id, name = labelEntity.name)),
                 ),
               ),
-              message = "message",
+              message = Some("message"),
               assignees = Some(
                 List(
                   NotePerson(
@@ -246,7 +246,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             parentNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -254,7 +254,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
-                message = "Message 2",
+                message = Some("Message 2"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -267,7 +267,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
               noteEntity.id,
               NoteForm(
                 title = "title",
-                message = "message",
+                message = Some("message"),
                 status = NoteStatus.Complete,
                 assignees = Set(
                   NotePersonForm(
@@ -294,7 +294,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                   ),
                 ),
               ),
-              message = "message",
+              message = Some("message"),
               assignees = Some(
                 List(
                   NotePerson(
@@ -323,7 +323,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 NoteId(-1),
                 NoteForm(
                   title = "title",
-                  message = "message",
+                  message = None,
                   status = NoteStatus.Ongoing,
                   assignees = Set(),
                   parentId = None,
@@ -342,7 +342,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             parentNoteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
@@ -350,7 +350,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 2",
-                message = "Message 2",
+                message = Some("Message 2"),
                 status = NoteStatus.Ongoing,
                 parentId = Some(parentNoteEntity.id),
               ),
@@ -358,7 +358,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
             _ <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 3",
-                message = "Message 3",
+                message = Some("Message 3"),
                 status = NoteStatus.Ongoing,
                 parentId = Some(noteEntity.id),
               ),

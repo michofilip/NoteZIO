@@ -13,14 +13,14 @@ import zote.services.{FlywayService, FlywayServiceImpl}
 object NoteLabelRepositorySpec extends ZIOSpecDefault {
   private val note1 = NoteEntity(
     title = "Note 1",
-    message = "Message 1",
+    message = Some("Message 1"),
     status = NoteStatus.Ongoing,
     parentId = None,
   )
 
   private val note2 = NoteEntity(
     title = "Note 2",
-    message = "Message 2",
+    message = Some("Message 2"),
     status = NoteStatus.Ongoing,
     parentId = None,
   )

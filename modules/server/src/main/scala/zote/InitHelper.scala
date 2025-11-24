@@ -24,7 +24,7 @@ case class InitHelper(
       note1 <- noteService.create(
         NoteForm(
           title = "Title 1",
-          message = "Message 1",
+          message = Some("Message 1"),
           status = NoteStatus.Draft,
           assignees = Set(
             NotePersonForm(personId = person1.id, role = NotePersonRole.Owner),
@@ -36,7 +36,7 @@ case class InitHelper(
       note2 <- noteService.create(
         NoteForm(
           title = "Title 2",
-          message = "Message 2",
+          message = Some("Message 2"),
           status = NoteStatus.Ongoing,
           assignees = Set(
             NotePersonForm(personId = person1.id, role = NotePersonRole.Owner),
@@ -56,7 +56,7 @@ case class InitHelper(
       note3 <- noteService.create(
         NoteForm(
           title = "Title 3",
-          message = "Message 3",
+          message = Some("Message 3"),
           status = NoteStatus.Ongoing,
           assignees = Set(
             NotePersonForm(personId = person3.id, role = NotePersonRole.Owner),
@@ -68,7 +68,7 @@ case class InitHelper(
       note4 <- noteService.create(
         NoteForm(
           title = "Title 4",
-          message = "Message 4",
+          message = Some("Message 4"),
           status = NoteStatus.Complete,
           assignees = Set(
             NotePersonForm(personId = person4.id, role = NotePersonRole.Owner),
@@ -80,7 +80,7 @@ case class InitHelper(
       note5 <- noteService.create(
         NoteForm(
           title = "Title 5",
-          message = "Message 5",
+          message = None,
           status = NoteStatus.Draft,
           assignees = Set(),
           parentId = None,

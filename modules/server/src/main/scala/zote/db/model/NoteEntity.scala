@@ -6,7 +6,7 @@ import zote.enums.NoteStatus
 
 case class NoteEntity(
     title: String,
-    message: String,
+    message: Option[String],
     status: NoteStatus,
     parentId: Option[NoteId],
     id: NoteId = NoteId.zero,

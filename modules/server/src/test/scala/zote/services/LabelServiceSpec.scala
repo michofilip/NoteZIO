@@ -101,7 +101,7 @@ object LabelServiceSpec extends ZIOSpecDefault {
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "title",
-                message = "message",
+                message = Some("message"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),

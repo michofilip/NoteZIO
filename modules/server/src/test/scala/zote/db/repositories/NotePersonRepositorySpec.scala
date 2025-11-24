@@ -14,21 +14,21 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
 
   private val note1 = NoteEntity(
     title = "Note 1",
-    message = "Message 1",
+    message = Some("Message 1"),
     status = NoteStatus.Ongoing,
     parentId = None,
   )
 
   private val note2 = NoteEntity(
     title = "Note 2",
-    message = "Message 2",
+    message = Some("Message 2"),
     status = NoteStatus.Ongoing,
     parentId = None,
   )
 
   private val note3 = NoteEntity(
     title = "Note 3",
-    message = "Message 3",
+    message = Some("Message 3"),
     status = NoteStatus.Ongoing,
     parentId = None,
   )

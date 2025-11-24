@@ -101,7 +101,7 @@ object PersonServiceSpec extends ZIOSpecDefault {
             noteEntity <- DbHelper.insertNote(
               NoteEntity(
                 title = "Note 1",
-                message = "Message 1",
+                message = Some("Message 1"),
                 status = NoteStatus.Ongoing,
                 parentId = None,
               ),
