@@ -66,9 +66,9 @@ case class LabelServiceImpl(
     for {
       _                 <- labelRepository.getById(id)
       noteLabelEntities <- noteLabelRepository.findAllByLabelId(id)
-      _ <- noteLabelRepository
-        .deleteAll(noteLabelEntities.map(entity => (entity.noteId, entity.labelId)))
-        .unless(noteLabelEntities.isEmpty)
+      _ <- ZIO.foreachDiscard(noteLabelEntities) { noteLabelEntity =>
+        noteLabelRepository.delete(noteLabelEntity.noteId, noteLabelEntity.labelId)
+      }
       _ <- labelRepository.delete(id)
     } yield ()
   }

@@ -66,9 +66,9 @@ case class PersonServiceImpl(
     for {
       _                  <- personRepository.getById(id)
       notePersonEntities <- notePersonRepository.findAllByPersonId(id)
-      _ <- notePersonRepository
-        .deleteAll(notePersonEntities.map(entity => (entity.noteId, entity.personId)))
-        .unless(notePersonEntities.isEmpty)
+      _ <- ZIO.foreachDiscard(notePersonEntities) { notePersonEntity =>
+        notePersonRepository.delete(notePersonEntity.noteId, notePersonEntity.personId)
+      }
       _ <- personRepository.delete(id)
     } yield ()
   }

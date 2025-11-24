@@ -13,7 +13,7 @@ object NoteStatus {
 
   given JsonCodec[NoteStatus] = JsonCodec[NoteStatus](
     JsonEncoder[String].contramap(_.toString),
-    JsonDecoder[String].map(NoteStatus.valueOf)
+    JsonDecoder[String].map(NoteStatus.valueOf),
   )
 
   given Schema[NoteStatus] = Schema.derivedEnumeration.defaultStringBased

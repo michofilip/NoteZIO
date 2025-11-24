@@ -124,8 +124,8 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
           }
         },
       ),
-      suite("provides function 'insertAll' that")(
-        test("inserts list of NotePersonEntities") {
+      suite("provides function 'upsert' that")(
+        test("inserts NotePersonEntity if not exists") {
           for {
             note   <- DbHelper.insertNote(note1)
             person <- DbHelper.insertPerson(person1)
@@ -136,7 +136,36 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
             )
 
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            _                    <- notePersonRepository.insertAll(List(notePerson))
+            _                    <- notePersonRepository.upsert(notePerson)
+
+            notePersonEntitiesByNoteId   <- notePersonRepository.findAllByNoteId(note.id)
+            notePersonEntitiesByPersonId <- notePersonRepository.findAllByPersonId(person.id)
+          } yield assertTrue {
+            notePersonEntitiesByNoteId.size == 1 &&
+            notePersonEntitiesByNoteId.contains(notePerson) &&
+            notePersonEntitiesByPersonId.size == 1 &&
+            notePersonEntitiesByPersonId.contains(notePerson)
+          }
+        },
+        test("updates NotePersonEntity if exists") {
+          for {
+            note   <- DbHelper.insertNote(note1)
+            person <- DbHelper.insertPerson(person1)
+            _ <- DbHelper.insertNotePerson(
+              NotePersonEntity(
+                noteId = note.id,
+                personId = person.id,
+                role = NotePersonRole.Owner,
+              ),
+            )
+            notePerson = NotePersonEntity(
+              noteId = note.id,
+              personId = person.id,
+              role = NotePersonRole.Maintainer,
+            )
+
+            notePersonRepository <- ZIO.service[NotePersonRepository]
+            _                    <- notePersonRepository.upsert(notePerson)
 
             notePersonEntitiesByNoteId   <- notePersonRepository.findAllByNoteId(note.id)
             notePersonEntitiesByPersonId <- notePersonRepository.findAllByPersonId(person.id)
@@ -148,8 +177,8 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
           }
         },
       ),
-      suite("provides function 'deleteAll' that")(
-        test("deletes list of NotePersonEntities if exist") {
+      suite("provides function 'delete' that")(
+        test("deletes NotePersonEntity if exist") {
           for {
             note   <- DbHelper.insertNote(note1)
             person <- DbHelper.insertPerson(person1)
@@ -164,7 +193,7 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
             notePersonRepository                     <- ZIO.service[NotePersonRepository]
             notePersonEntitiesByNoteIdBeforeDelete   <- notePersonRepository.findAllByNoteId(note.id)
             notePersonEntitiesByPersonIdBeforeDelete <- notePersonRepository.findAllByPersonId(person.id)
-            _                                        <- notePersonRepository.deleteAll(List((note.id, person.id)))
+            _                                        <- notePersonRepository.delete(note.id, person.id)
             notePersonEntitiesByNoteIdAfterDelete    <- notePersonRepository.findAllByNoteId(note.id)
             notePersonEntitiesByPersonIdAfterDelete  <- notePersonRepository.findAllByPersonId(person.id)
           } yield assertTrue {
@@ -174,10 +203,10 @@ object NotePersonRepositorySpec extends ZIOSpecDefault {
             notePersonEntitiesByPersonIdAfterDelete.isEmpty
           }
         },
-        test("does nothing if NotePersonEntities not exist") {
+        test("does nothing if NotePersonEntity not exist") {
           for {
             notePersonRepository <- ZIO.service[NotePersonRepository]
-            result               <- notePersonRepository.deleteAll(List((NoteId(-1), PersonId(-1)))).exit
+            result               <- notePersonRepository.delete(NoteId(-1), PersonId(-1)).exit
           } yield assertTrue {
             result.isSuccess
           }

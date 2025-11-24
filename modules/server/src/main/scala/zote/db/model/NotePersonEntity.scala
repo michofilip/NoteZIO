@@ -17,4 +17,6 @@ object NotePersonEntity {
     _.personId -> "person_id",
     _.role     -> "role",
   )
+
+  inline given UpdateMeta[NotePersonEntity] = updateMeta[NotePersonEntity](_.noteId, _.personId)
 }

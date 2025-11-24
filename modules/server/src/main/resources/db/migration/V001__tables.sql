@@ -28,7 +28,7 @@ CREATE TABLE note_person
     note_id   BIGINT      NOT NULL,
     person_id BIGINT      NOT NULL,
     role      VARCHAR(10) NOT NULL,
-    CONSTRAINT note_person_pk PRIMARY KEY (note_id, person_id, role),
+    CONSTRAINT note_person_pk PRIMARY KEY (note_id, person_id),
     CONSTRAINT note_person_note_fk FOREIGN KEY (note_id) REFERENCES note (id),
     CONSTRAINT note_person_person_fk FOREIGN KEY (person_id) REFERENCES person (id)
 );

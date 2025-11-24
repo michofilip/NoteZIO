@@ -86,15 +86,15 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
           }
         },
       ),
-      suite("provides function 'insertAll' that")(
-        test("inserts list of NoteLabelEntities") {
+      suite("provides function 'insert' that")(
+        test("inserts NoteLabelEntity") {
           for {
             note  <- DbHelper.insertNote(note1)
             label <- DbHelper.insertLabel(label1)
             noteLabel = NoteLabelEntity(noteId = note.id, labelId = label.id)
 
             noteLabelRepository        <- ZIO.service[NoteLabelRepository]
-            _                          <- noteLabelRepository.insertAll(List(noteLabel))
+            _                          <- noteLabelRepository.insert(noteLabel)
             noteLabelEntitiesByNoteId  <- noteLabelRepository.findAllByNoteId(note.id)
             noteLabelEntitiesByLabelId <- noteLabelRepository.findAllByLabelId(label.id)
           } yield assertTrue {
@@ -105,8 +105,8 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
           }
         },
       ),
-      suite("provides function 'deleteAll' that")(
-        test("deletes list of NoteLabelEntities if exist") {
+      suite("provides function 'delete' that")(
+        test("deletes NoteLabelEntity if exist") {
           for {
             note      <- DbHelper.insertNote(note1)
             label     <- DbHelper.insertLabel(label1)
@@ -115,7 +115,7 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
             noteLabelRepository                    <- ZIO.service[NoteLabelRepository]
             noteLabelEntitiesByNoteIdBeforeDelete  <- noteLabelRepository.findAllByNoteId(note.id)
             noteLabelEntitiesByLabelIdBeforeDelete <- noteLabelRepository.findAllByLabelId(label.id)
-            _                                      <- noteLabelRepository.deleteAll(List((note.id, label.id)))
+            _                                      <- noteLabelRepository.delete(note.id, label.id)
             noteLabelEntitiesByNoteIdAfterDelete   <- noteLabelRepository.findAllByNoteId(note.id)
             noteLabelEntitiesByLabelIdAfterDelete  <- noteLabelRepository.findAllByLabelId(label.id)
           } yield assertTrue {
@@ -125,10 +125,10 @@ object NoteLabelRepositorySpec extends ZIOSpecDefault {
             noteLabelEntitiesByLabelIdAfterDelete.isEmpty
           }
         },
-        test("does nothing if NoteLabelEntities not exist") {
+        test("does nothing if NoteLabelEntity not exist") {
           for {
             noteLabelRepository <- ZIO.service[NoteLabelRepository]
-            result              <- noteLabelRepository.deleteAll(List((NoteId(-1), LabelId(-1)))).exit
+            result              <- noteLabelRepository.delete(NoteId(-1), LabelId(-1)).exit
           } yield assertTrue {
             result.isSuccess
           }

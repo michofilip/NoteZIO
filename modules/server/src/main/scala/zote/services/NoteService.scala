@@ -155,17 +155,16 @@ case class NoteServiceImpl(
         (currentNotePersonEntities.get(key), newNotePersonEntities.get(key))
       }
 
-      notePersonEntitiesToCreate = currentVsNew.collect { case (None, Some(entity)) => entity }
-      notePersonEntitiesToDelete = currentVsNew.collect { case (Some(entity), None) =>
-        (entity.noteId, entity.personId)
+      _ <- ZIO.foreachDiscard(currentVsNew) {
+        case (Some(current), Some(entity)) if current.role != entity.role =>
+          notePersonRepository.upsert(entity)
+        case (None, Some(entity)) =>
+          notePersonRepository.upsert(entity)
+        case (Some(entity), None) =>
+          notePersonRepository.delete(entity.noteId, entity.personId)
+        case _ =>
+          ZIO.unit
       }
-
-      _ <- notePersonRepository
-        .deleteAll(notePersonEntitiesToDelete)
-        .unless(notePersonEntitiesToDelete.isEmpty)
-      _ <- notePersonRepository
-        .insertAll(notePersonEntitiesToCreate)
-        .unless(notePersonEntitiesToCreate.isEmpty)
     } yield ()
   }
 
@@ -186,15 +185,14 @@ case class NoteServiceImpl(
           (currentNoteLabelEntities.get(key), newNoteLabelEntities.get(key))
         }
 
-      noteLabelEntitiesToCreate = currentVsNew.collect { case (None, Some(entity)) => entity }
-      noteLabelEntitiesToDelete = currentVsNew.collect { case (Some(entity), None) => (entity.noteId, entity.labelId) }
-
-      _ <- noteLabelRepository
-        .deleteAll(noteLabelEntitiesToDelete)
-        .unless(noteLabelEntitiesToDelete.isEmpty)
-      _ <- noteLabelRepository
-        .insertAll(noteLabelEntitiesToCreate)
-        .unless(noteLabelEntitiesToCreate.isEmpty)
+      _ <- ZIO.foreachDiscard(currentVsNew) {
+        case (None, Some(entity)) =>
+          noteLabelRepository.insert(entity)
+        case (Some(entity), None) =>
+          noteLabelRepository.delete(entity.noteId, entity.labelId)
+        case _ =>
+          ZIO.unit
+      }
     } yield ()
   }
 
@@ -247,26 +245,28 @@ case class NoteServiceImpl(
       noteEntity: NoteEntity,
   ): Task[Option[List[NoteHeader]]] = {
     noteRepository.findAllByParentNoteId(noteEntity.id).flatMap { noteEntities =>
-      ZIO.foreachPar(noteEntities)(toHeader).unless(noteEntities.isEmpty)
+      ZIO
+        .foreachPar(noteEntities)(toHeader)
+        .unless(noteEntities.isEmpty)
     }
   }
 
   private def getAssignees(
       noteEntity: NoteEntity,
   ): Task[Option[List[NotePerson]]] = {
-    notePersonRepository.findAllByNoteId(noteEntity.id).flatMap { notePersonEntities =>
-      ZIO.unless(notePersonEntities.isEmpty) {
-        val personIdToRoles = notePersonEntities.groupMap(_.personId)(_.role).toList
-        ZIO.foreachPar(personIdToRoles) { case (personId, roles) =>
-          personService.getById(personId).map { person =>
+    for {
+      notePersonEntities <- notePersonRepository.findAllByNoteId(noteEntity.id)
+      maybeNotePersons <- ZIO
+        .foreachPar(notePersonEntities) { notePersonEntity =>
+          personService.getById(notePersonEntity.personId).map { person =>
             NotePerson(
               person = person,
-              roles = roles,
+              role = notePersonEntity.role,
             )
           }
         }
-      }
-    }
+        .unless(notePersonEntities.isEmpty)
+    } yield maybeNotePersons
   }
 }
 

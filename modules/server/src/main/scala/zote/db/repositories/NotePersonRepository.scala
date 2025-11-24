@@ -13,9 +13,9 @@ trait NotePersonRepository {
 
   def findAllByPersonId(personId: PersonId): Task[List[NotePersonEntity]]
 
-  def insertAll(notePersonEntities: Seq[NotePersonEntity]): Task[Unit]
+  def upsert(notePersonEntity: NotePersonEntity): Task[Unit]
 
-  def deleteAll(ids: Seq[(NoteId, PersonId)]): Task[Unit]
+  def delete(noteId: NoteId, personId: PersonId): Task[Unit]
 }
 
 case class NotePersonRepositoryImpl(
@@ -34,21 +34,42 @@ case class NotePersonRepositoryImpl(
       run(query[NotePersonEntity].filter(np => np.personId == lift(personId)))
     }
 
-  override def insertAll(notePersonEntities: Seq[NotePersonEntity]): Task[Unit] =
+  override def upsert(notePersonEntity: NotePersonEntity): Task[Unit] = {
+    // should be rewritten to onConflictUpdate if on postgres
     transaction {
-      run(
-        liftQuery(notePersonEntities).foreach(np => query[NotePersonEntity].insertValue(np)),
-      ).unit
-    }
+      for {
+        isNew <- run {
+          query[NotePersonEntity]
+            .filter(np => np.noteId == lift(notePersonEntity.noteId) && np.personId == lift(notePersonEntity.personId))
+        }.map(_.isEmpty)
 
-  override def deleteAll(ids: Seq[(NoteId, PersonId)]): Task[Unit] =
+        _ <-
+          if (isNew) {
+            run(insert(lift(notePersonEntity)))
+          } else {
+            run(update(lift(notePersonEntity)))
+          }
+      } yield ()
+    }
+  }
+
+  inline private def insert = quote { (notePersonEntity: NotePersonEntity) =>
+    query[NotePersonEntity].insertValue(notePersonEntity)
+  }
+
+  inline private def update = quote { (notePersonEntity: NotePersonEntity) =>
+    query[NotePersonEntity]
+      .filter(np => np.noteId == notePersonEntity.noteId && np.personId == notePersonEntity.personId)
+      .updateValue(notePersonEntity)
+
+  }
+
+  override def delete(noteId: NoteId, personId: PersonId): Task[Unit] =
     transaction {
       run {
-        liftQuery(ids).foreach { case (noteId, personId) =>
-          query[NotePersonEntity]
-            .filter(np => np.noteId == noteId && np.personId == personId)
-            .delete
-        }
+        query[NotePersonEntity]
+          .filter(np => np.noteId == lift(noteId) && np.personId == lift(personId))
+          .delete
       }.unit
     }
 }

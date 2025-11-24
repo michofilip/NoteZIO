@@ -13,9 +13,9 @@ trait NoteLabelRepository {
 
   def findAllByLabelId(labelId: LabelId): Task[List[NoteLabelEntity]]
 
-  def insertAll(noteLabelEntities: Seq[NoteLabelEntity]): Task[Unit]
+  def insert(noteLabelEntity: NoteLabelEntity): Task[Unit]
 
-  def deleteAll(ids: Seq[(NoteId, LabelId)]): Task[Unit]
+  def delete(noteId: NoteId, labelId: LabelId): Task[Unit]
 }
 
 case class NoteLabelRepositoryImpl(
@@ -34,21 +34,19 @@ case class NoteLabelRepositoryImpl(
       run(query[NoteLabelEntity].filter(nl => nl.labelId == lift(labelId)))
     }
 
-  override def insertAll(noteLabelEntities: Seq[NoteLabelEntity]): Task[Unit] =
-    transaction {
-      run(
-        liftQuery(noteLabelEntities).foreach(nl => query[NoteLabelEntity].insertValue(nl)),
-      ).unit
-    }
-
-  override def deleteAll(ids: Seq[(NoteId, LabelId)]): Task[Unit] =
+  override def insert(noteLabelEntity: NoteLabelEntity): Task[Unit] =
     transaction {
       run {
-        liftQuery(ids).foreach { case (noteId, labelId) =>
-          query[NoteLabelEntity]
-            .filter(nl => nl.noteId == noteId && nl.labelId == labelId)
-            .delete
-        }
+        query[NoteLabelEntity].insertValue(lift(noteLabelEntity))
+      }.unit
+    }
+
+  override def delete(noteId: NoteId, labelId: LabelId): Task[Unit] =
+    transaction {
+      run {
+        query[NoteLabelEntity]
+          .filter(nl => nl.noteId == lift(noteId) && nl.labelId == lift(labelId))
+          .delete
       }.unit
     }
 }

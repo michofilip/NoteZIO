@@ -5,5 +5,5 @@ import zote.enums.NotePersonRole
 
 case class NotePerson(
     person: Person,
-    roles: List[NotePersonRole],
+    role: NotePersonRole,
 ) derives JsonCodec

@@ -144,7 +144,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 List(
                   NotePerson(
                     person = Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner),
+                    role = NotePersonRole.Owner,
                   ),
                 ),
               ),
@@ -223,7 +223,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 List(
                   NotePerson(
                     person = Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner),
+                    role = NotePersonRole.Owner,
                   ),
                 ),
               ),
@@ -299,7 +299,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 List(
                   NotePerson(
                     person = Person(id = personEntity.id, name = personEntity.name),
-                    roles = List(NotePersonRole.Owner),
+                    role = NotePersonRole.Owner,
                   ),
                 ),
               ),
