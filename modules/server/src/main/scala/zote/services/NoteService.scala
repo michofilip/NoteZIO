@@ -1,6 +1,5 @@
 package zote.services
 
-import com.softwaremill.quicklens.*
 import zio.*
 import zote.Ids.{LabelId, NoteId}
 import zote.db.QuillContext
@@ -48,52 +47,46 @@ case class NoteServiceImpl(
 
   override def create(noteForm: NoteForm): Task[Note] = transaction {
     for {
-      _ <- validateNote(noteForm)
-
-      noteEntity <- noteRepository.upsert {
-        NoteEntity(
-          title = noteForm.title,
-          message = noteForm.message,
-          status = noteForm.status,
-          parentId = noteForm.parentId,
-        )
-      }
-
-      _ <- updateDependencies(
-        noteId = noteEntity.id,
-        assignees = noteForm.assignees.toSeq,
-        labelIds = noteForm.labels.toSeq,
-      )
-
-      note <- toNote(noteEntity)
+      _          <- validateNote(noteForm)
+      noteEntity <- toNoteEntity(noteForm)
+      noteEntity <- noteRepository.upsert(noteEntity)
+      _          <- updateDependencies(noteEntity.id, noteForm)
+      note       <- toNote(noteEntity)
     } yield note
   }
 
   override def update(id: NoteId, noteForm: NoteForm): Task[Note] = transaction {
     for {
-      _ <- validateNote(noteForm)
-
+      _          <- validateNote(noteForm)
       noteEntity <- noteRepository.getById(id)
-      noteEntity <- noteRepository.upsert {
-        noteEntity
-          .modify(_.title)
-          .setTo(noteForm.title)
-          .modify(_.message)
-          .setTo(noteForm.message)
-          .modify(_.status)
-          .setTo(noteForm.status)
-          .modify(_.parentId)
-          .setTo(noteForm.parentId)
-      }
-
-      _ <- updateDependencies(
-        noteId = noteEntity.id,
-        assignees = noteForm.assignees.toSeq,
-        labelIds = noteForm.labels.toSeq,
-      )
-
-      note <- toNote(noteEntity)
+      noteEntity <- toNoteEntity(noteForm, noteEntity)
+      noteEntity <- noteRepository.upsert(noteEntity)
+      _          <- updateDependencies(noteEntity.id, noteForm)
+      note       <- toNote(noteEntity)
     } yield note
+  }
+
+  inline private def toNoteEntity(noteForm: NoteForm, inline noteEntity: NoteEntity | Unit = ()): Task[NoteEntity] = {
+    inline noteEntity match {
+      case noteEntity: NoteEntity =>
+        ZIO.succeed {
+          noteEntity.copy(
+            title = noteForm.title,
+            message = noteForm.message,
+            status = noteForm.status,
+            parentId = noteForm.parentId,
+          )
+        }
+      case _ =>
+        ZIO.succeed {
+          NoteEntity(
+            title = noteForm.title,
+            message = noteForm.message,
+            status = noteForm.status,
+            parentId = noteForm.parentId,
+          )
+        }
+    }
   }
 
   override def delete(id: NoteId): Task[Unit] = transaction {
@@ -113,32 +106,41 @@ case class NoteServiceImpl(
       <&> ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)
   }
 
-  private def deleteDependencies(noteId: NoteId) = {
-    updateDependencies(noteId, Seq.empty, Seq.empty)
+  private def deleteDependencies(noteId: NoteId): Task[Unit] = {
+    val deleteNoteLabelEntities = noteLabelRepository.findAllByNoteId(noteId).flatMap { noteLabelEntities =>
+      ZIO.foreachParDiscard(noteLabelEntities) { noteLabelEntity =>
+        noteLabelRepository.delete(noteLabelEntity.noteId, noteLabelEntity.labelId)
+      }
+    }
+
+    val deleteNotePersonEntities = notePersonRepository.findAllByNoteId(noteId).flatMap { notePersonEntities =>
+      ZIO.foreachParDiscard(notePersonEntities) { notePersonEntity =>
+        notePersonRepository.delete(notePersonEntity.noteId, notePersonEntity.personId)
+      }
+    }
+
+    deleteNoteLabelEntities <&> deleteNotePersonEntities
   }
 
   private def detachChildren(noteId: NoteId): Task[Unit] = {
     for {
       noteEntities <- noteRepository.findAllByParentNoteId(noteId)
-      noteEntities <- ZIO.succeed(
-        noteEntities.map(_.modify(_.parentId).setTo(None)),
-      )
-      _ <- ZIO.foreachParDiscard(noteEntities)(noteRepository.upsert)
+      noteEntities <- ZIO.succeed(noteEntities.map(_.copy(parentId = None)))
+      _            <- ZIO.foreachParDiscard(noteEntities)(noteRepository.upsert)
     } yield ()
   }
 
   private def updateDependencies(
       noteId: NoteId,
-      assignees: Seq[NotePersonForm],
-      labelIds: Seq[LabelId],
-  ) = {
-    updateNotePersons(noteId, assignees) <&> updateNoteLabels(noteId, labelIds)
+      noteForm: NoteForm,
+  ): Task[Unit] = {
+    updateNotePersons(noteId, noteForm.assignees.toSeq) <&> updateNoteLabels(noteId, noteForm.labels.toSeq)
   }
 
   private def updateNotePersons(
       noteId: NoteId,
       notePersons: Seq[NotePersonForm],
-  ) = {
+  ): Task[Unit] = {
     for {
       currentNotePersonEntities <- notePersonRepository
         .findAllByNoteId(noteId)
@@ -155,7 +157,7 @@ case class NoteServiceImpl(
         (currentNotePersonEntities.get(key), newNotePersonEntities.get(key))
       }
 
-      _ <- ZIO.foreachDiscard(currentVsNew) {
+      _ <- ZIO.foreachParDiscard(currentVsNew) {
         case (Some(current), Some(entity)) if current.role != entity.role =>
           notePersonRepository.upsert(entity)
         case (None, Some(entity)) =>
@@ -168,7 +170,7 @@ case class NoteServiceImpl(
     } yield ()
   }
 
-  private def updateNoteLabels(noteId: NoteId, labelIds: Seq[LabelId]) = {
+  private def updateNoteLabels(noteId: NoteId, labelIds: Seq[LabelId]): Task[Unit] = {
     for {
       currentNoteLabelEntities <- noteLabelRepository
         .findAllByNoteId(noteId)
@@ -185,7 +187,7 @@ case class NoteServiceImpl(
           (currentNoteLabelEntities.get(key), newNoteLabelEntities.get(key))
         }
 
-      _ <- ZIO.foreachDiscard(currentVsNew) {
+      _ <- ZIO.foreachParDiscard(currentVsNew) {
         case (None, Some(entity)) =>
           noteLabelRepository.insert(entity)
         case (Some(entity), None) =>

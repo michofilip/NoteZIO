@@ -1,6 +1,5 @@
 package zote.services
 
-import com.softwaremill.quicklens.*
 import zio.*
 import zote.Ids.LabelId
 import zote.db.QuillContext
@@ -42,25 +41,34 @@ case class LabelServiceImpl(
 
   override def create(labelForm: LabelForm): Task[Label] = transaction {
     for {
-      _ <- Validator.validateZIO(labelForm)
-      labelEntity <- labelRepository.upsert {
-        LabelEntity(name = labelForm.name)
-      }
-      label <- toLabel(labelEntity)
+      _           <- Validator.validateZIO(labelForm)
+      labelEntity <- toLabelEntity(labelForm)
+      labelEntity <- labelRepository.upsert(labelEntity)
+      label       <- toLabel(labelEntity)
     } yield label
   }
 
-  override def update(id: LabelId, labelForm: LabelForm): Task[Label] =
+  override def update(id: LabelId, labelForm: LabelForm): Task[Label] = {
     transaction {
       for {
         _           <- Validator.validateZIO(labelForm)
         labelEntity <- labelRepository.getById(id)
-        labelEntity <- labelRepository.upsert {
-          labelEntity.modify(_.name).setTo(labelForm.name)
-        }
-        label <- toLabel(labelEntity)
+        labelEntity <- toLabelEntity(labelForm, labelEntity)
+        labelEntity <- labelRepository.upsert(labelEntity)
+        label       <- toLabel(labelEntity)
       } yield label
     }
+  }
+
+  inline private def toLabelEntity(
+      labelForm: LabelForm,
+      inline labelEntity: LabelEntity | Unit = (),
+  ): Task[LabelEntity] = {
+    inline labelEntity match {
+      case labelEntity: LabelEntity => ZIO.succeed(labelEntity.copy(name = labelForm.name))
+      case _                        => ZIO.succeed(LabelEntity(name = labelForm.name))
+    }
+  }
 
   override def delete(id: LabelId): Task[Unit] = transaction {
     for {

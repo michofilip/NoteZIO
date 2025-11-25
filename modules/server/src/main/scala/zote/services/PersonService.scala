@@ -1,6 +1,5 @@
 package zote.services
 
-import com.softwaremill.quicklens.*
 import zio.*
 import zote.Ids.PersonId
 import zote.db.QuillContext
@@ -42,11 +41,10 @@ case class PersonServiceImpl(
 
   override def create(personForm: PersonForm): Task[Person] = transaction {
     for {
-      _ <- Validator.validateZIO(personForm)
-      personEntity <- personRepository.upsert {
-        PersonEntity(name = personForm.name)
-      }
-      person <- toPerson(personEntity)
+      _            <- Validator.validateZIO(personForm)
+      personEntity <- toPersonEntity(personForm)
+      personEntity <- personRepository.upsert(personEntity)
+      person       <- toPerson(personEntity)
     } yield person
   }
 
@@ -55,12 +53,21 @@ case class PersonServiceImpl(
       for {
         _            <- Validator.validateZIO(personForm)
         personEntity <- personRepository.getById(id)
-        personEntity <- personRepository.upsert {
-          personEntity.modify(_.name).setTo(personForm.name)
-        }
-        person <- toPerson(personEntity)
+        personEntity <- toPersonEntity(personForm, personEntity)
+        personEntity <- personRepository.upsert(personEntity)
+        person       <- toPerson(personEntity)
       } yield person
     }
+
+  inline private def toPersonEntity(
+      personForm: PersonForm,
+      inline personEntity: PersonEntity | Unit = (),
+  ): Task[PersonEntity] = {
+    inline personEntity match {
+      case personEntity: PersonEntity => ZIO.succeed(personEntity.copy(name = personForm.name))
+      case _                          => ZIO.succeed(PersonEntity(name = personForm.name))
+    }
+  }
 
   override def delete(id: PersonId): Task[Unit] = transaction {
     for {

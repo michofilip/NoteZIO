@@ -8,8 +8,8 @@ import zote.enums.NoteStatus
 
 case class NoteForm(
     title: String,
-    message: Option[String],
     status: NoteStatus,
+    message: Option[String],
     assignees: Set[NotePersonForm],
     parentId: Option[NoteId],
     labels: Set[LabelId],
