@@ -7,7 +7,6 @@ import zote.db.model.LabelEntity
 import zote.db.repositories.{LabelRepository, NoteLabelRepository}
 import zote.dto.Label
 import zote.dto.form.LabelForm
-import zote.dto.validation.Validator
 
 trait LabelService {
   def getAll: Task[List[Label]]
@@ -41,7 +40,6 @@ case class LabelServiceImpl(
 
   override def create(labelForm: LabelForm): Task[Label] = transaction {
     for {
-      _           <- Validator.validateZIO(labelForm)
       labelEntity <- toLabelEntity(labelForm)
       labelEntity <- labelRepository.upsert(labelEntity)
       label       <- toLabel(labelEntity)
@@ -51,7 +49,6 @@ case class LabelServiceImpl(
   override def update(id: LabelId, labelForm: LabelForm): Task[Label] = {
     transaction {
       for {
-        _           <- Validator.validateZIO(labelForm)
         labelEntity <- labelRepository.getById(id)
         labelEntity <- toLabelEntity(labelForm, labelEntity)
         labelEntity <- labelRepository.upsert(labelEntity)

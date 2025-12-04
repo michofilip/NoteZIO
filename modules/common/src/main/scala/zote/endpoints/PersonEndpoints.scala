@@ -30,7 +30,7 @@ trait PersonEndpoints extends Endpoints {
     .description("create")
     .post
     .in("persons")
-    .in(jsonBody[PersonForm])
+    .in(jsonBody[PersonForm.Raw])
     .out(jsonBody[Person])
 
   val updateEndpoint = baseEndpoint
@@ -39,7 +39,7 @@ trait PersonEndpoints extends Endpoints {
     .description("update")
     .put
     .in("persons" / path[Long]("id"))
-    .in(jsonBody[PersonForm])
+    .in(jsonBody[PersonForm.Raw])
     .out(jsonBody[Person])
 
   val deleteEndpoint = baseEndpoint

@@ -1,8 +1,8 @@
 package zote.endpoints
 
+import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.*
 import zio.*
 import zote.dto.form.NoteForm
 import zote.dto.{Note, NoteHeader}
@@ -30,7 +30,7 @@ trait NoteEndpoints extends Endpoints {
     .description("create")
     .post
     .in("notes")
-    .in(jsonBody[NoteForm])
+    .in(jsonBody[NoteForm.Raw])
     .out(jsonBody[Note])
 
   val updateEndpoint = baseEndpoint
@@ -39,7 +39,7 @@ trait NoteEndpoints extends Endpoints {
     .description("update")
     .put
     .in("notes" / path[Long]("id"))
-    .in(jsonBody[NoteForm])
+    .in(jsonBody[NoteForm.Raw])
     .out(jsonBody[Note])
 
   val deleteEndpoint = baseEndpoint
@@ -50,11 +50,11 @@ trait NoteEndpoints extends Endpoints {
     .in("notes" / path[Long]("id"))
     .out(emptyOutput)
 
-  final override  val endpoints: List[AnyEndpoint] = List(
+  final override val endpoints: List[AnyEndpoint] = List(
     getAllEndpoint,
     getByIdEndpoint,
     createEndpoint,
     updateEndpoint,
-    deleteEndpoint
+    deleteEndpoint,
   )
 }

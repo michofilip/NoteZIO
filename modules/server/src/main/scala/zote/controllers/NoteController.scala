@@ -6,12 +6,14 @@ import zio.*
 import zote.Ids.NoteId
 import zote.endpoints.NoteEndpoints
 import zote.services.NoteService
+import zote.services.validation.NoteValidationService
 
 case class NoteController(
     private val noteService: NoteService,
+    private val noteValidationService: NoteValidationService,
 ) extends Controller
     with NoteEndpoints {
-  
+
   private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
     noteService.getAll
   }
@@ -21,11 +23,18 @@ case class NoteController(
   }
 
   private val create = createEndpoint.zServerLogic[Any] { noteForm =>
-    noteService.create(noteForm)
+    for {
+      noteForm <- noteValidationService.validate(noteForm)
+      note     <- noteService.create(noteForm)
+    } yield note
   }
 
   private val update = updateEndpoint.zServerLogic[Any] { case (id, noteForm) =>
-    noteService.update(NoteId(id), noteForm)
+    for {
+      noteForm <- noteValidationService.validate(noteForm)
+      note     <- noteService.update(NoteId(id), noteForm)
+    } yield note
+
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>

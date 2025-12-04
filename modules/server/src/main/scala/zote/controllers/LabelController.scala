@@ -6,9 +6,11 @@ import zio.*
 import zote.Ids.LabelId
 import zote.endpoints.LabelEndpoints
 import zote.services.LabelService
+import zote.services.validation.LabelValidationService
 
 class LabelController(
     private val labelService: LabelService,
+    private val labelValidationService: LabelValidationService,
 ) extends Controller
     with LabelEndpoints {
 
@@ -21,11 +23,18 @@ class LabelController(
   }
 
   private val create = createEndpoint.zServerLogic[Any] { labelForm =>
-    labelService.create(labelForm)
+    for {
+      labelForm <- labelValidationService.validate(labelForm)
+      label     <- labelService.create(labelForm)
+    } yield label
   }
 
   private val update = updateEndpoint.zServerLogic[Any] { (id, labelForm) =>
-    labelService.update(LabelId(id), labelForm)
+    for {
+      id        <- ZIO.succeed(LabelId(id))
+      labelForm <- labelValidationService.validate(labelForm)
+      label     <- labelService.update(id, labelForm)
+    } yield label
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>

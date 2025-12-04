@@ -1,8 +1,8 @@
 package zote.endpoints
 
+import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import sttp.tapir.*
 import zio.*
 import zote.dto.Label
 import zote.dto.form.LabelForm
@@ -31,7 +31,7 @@ trait LabelEndpoints extends Endpoints {
     .description("create")
     .post
     .in("labels")
-    .in(jsonBody[LabelForm])
+    .in(jsonBody[LabelForm.Raw])
     .out(jsonBody[Label])
 
   val updateEndpoint = baseEndpoint
@@ -40,7 +40,7 @@ trait LabelEndpoints extends Endpoints {
     .description("update")
     .put
     .in("labels" / path[Long]("id"))
-    .in(jsonBody[LabelForm])
+    .in(jsonBody[LabelForm.Raw])
     .out(jsonBody[Label])
 
   val deleteEndpoint = baseEndpoint
@@ -56,6 +56,6 @@ trait LabelEndpoints extends Endpoints {
     getByIdEndpoint,
     createEndpoint,
     updateEndpoint,
-    deleteEndpoint
+    deleteEndpoint,
   )
 }

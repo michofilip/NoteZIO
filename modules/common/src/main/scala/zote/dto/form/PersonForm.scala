@@ -1,19 +1,28 @@
 package zote.dto.form
 
+import sttp.tapir.Schema.annotations.*
 import zio.*
 import zio.json.JsonCodec
-import zote.dto.validation.Validations
-import zote.dto.validation.Validations.*
+import zio.prelude.*
+import zote.Validations
 
 case class PersonForm(
-    name: String
-) derives JsonCodec
+    name: String,
+)
 
 object PersonForm {
 
-  given Validations[PersonForm] = List(
-    notBlank("name", _.name),
-    minLength("name", _.name, 2),
-    maxLength("name", _.name, 255)
-  )
+  @title("PersonForm")
+  case class Raw(
+      name: Option[String] = None,
+  ) derives JsonCodec {
+    def validate: Validation[String, PersonForm] = {
+      val validateName = Validations.validateRequired("name", name)(
+        Validations.minLength(3),
+        Validations.maxLength(255),
+      )
+
+      validateName.map(PersonForm.apply)
+    }
+  }
 }

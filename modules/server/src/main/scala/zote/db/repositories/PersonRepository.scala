@@ -16,6 +16,8 @@ trait PersonRepository {
   final def getById(id: PersonId): Task[PersonEntity] =
     findById(id).someOrFail(NotFoundException(s"Person id: ${id.value} not found"))
 
+  def findByName(name: String): Task[Option[PersonEntity]]
+
   def upsert(personEntity: PersonEntity): Task[PersonEntity]
 
   def delete(id: PersonId): Task[Unit]
@@ -33,6 +35,11 @@ case class PersonRepositoryImpl(
 
   override def findById(id: PersonId): Task[Option[PersonEntity]] = transaction {
     run(query[PersonEntity].filter(p => p.id == lift(id)))
+      .map(_.headOption)
+  }
+
+  override def findByName(name: String): Task[Option[PersonEntity]] = transaction {
+    run(query[PersonEntity].filter(p => p.name == lift(name)))
       .map(_.headOption)
   }
 

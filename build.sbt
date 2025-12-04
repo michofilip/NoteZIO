@@ -6,16 +6,14 @@ val zioVersion        = "2.1.23"
 val zioJsonVersion    = "0.7.45"
 val zioConfigVersion  = "4.0.6"
 val zioLoggingVersion = "2.5.2"
-val zioPreludeVersion = "1.0.0-RC42"
+val zioPreludeVersion = "1.0.0-RC44"
 val slf4jVersion      = "2.0.17"
 val quillVersion      = "4.8.6"
-//val postgresqlVersion = "42.7.4"
-val h2Version        = "2.4.240"
-val flywayVersion    = "11.18.0"
-val quicklensVersion = "1.9.12"
-val tapirVersion     = "1.12.5"
-val sttpVersion      = "3.11.0"
-//val sttpVersion = "4.0.0-M18"
+val h2Version         = "2.4.240"
+val flywayVersion     = "11.18.0"
+val quicklensVersion  = "1.9.12"
+val tapirVersion      = "1.12.6"
+val sttpVersion       = "4.0.13"
 val frontrouteVersion = "0.19.1"
 
 lazy val common = crossProject(JVMPlatform, JSPlatform)
@@ -60,12 +58,10 @@ lazy val server = (project in file("modules/server"))
       "com.softwaremill.sttp.tapir"   %% "tapir-zio-http-server"   % tapirVersion,
       "com.softwaremill.sttp.tapir"   %% "tapir-json-zio"          % tapirVersion,
       "com.softwaremill.sttp.tapir"   %% "tapir-swagger-ui-bundle" % tapirVersion,
-      "com.softwaremill.sttp.tapir"   %% "tapir-sttp-stub-server"  % tapirVersion % Test,
-      "com.softwaremill.sttp.client3" %% "zio"                     % sttpVersion,
-//      "com.softwaremill.sttp.client4" %% "zio" % sttpVersion,
+      "com.softwaremill.sttp.tapir"   %% "tapir-sttp-stub4-server" % tapirVersion % Test,
+      "com.softwaremill.sttp.client4" %% "zio"                     % sttpVersion,
 // DB
-      "io.getquill" %% "quill-jdbc-zio" % quillVersion,
-//      "org.postgresql" % "postgresql" % postgresqlVersion,
+      "io.getquill"   %% "quill-jdbc-zio"             % quillVersion,
       "com.h2database" % "h2"                         % h2Version,
       "org.flywaydb"   % "flyway-core"                % flywayVersion,
       "org.flywaydb"   % "flyway-database-postgresql" % flywayVersion,
@@ -79,12 +75,11 @@ lazy val server = (project in file("modules/server"))
 lazy val app = (project in file("modules/app"))
   .settings(
     libraryDependencies ++= Seq(
-      "com.softwaremill.sttp.tapir"   %%% "tapir-sttp-client" % tapirVersion,
-      "com.softwaremill.sttp.tapir"   %%% "tapir-json-zio"    % tapirVersion,
-      "com.softwaremill.sttp.client3" %%% "zio"               % sttpVersion,
-//      "com.softwaremill.sttp.client4" %%% "zio" % sttpVersion,
-      "dev.zio"       %%% "zio-json"   % zioJsonVersion,
-      "dev.frontroute" %%% "frontroute" % frontrouteVersion, // Brings in Laminar 17
+      "com.softwaremill.sttp.tapir"   %%% "tapir-sttp-client4" % tapirVersion,
+      "com.softwaremill.sttp.tapir"   %%% "tapir-json-zio"     % tapirVersion,
+      "com.softwaremill.sttp.client4" %%% "zio"                % sttpVersion,
+      "dev.zio"                       %%% "zio-json"           % zioJsonVersion,
+      "dev.frontroute"                %%% "frontroute"         % frontrouteVersion, // Brings in Laminar 17
     ),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule) },
     semanticdbEnabled               := true,

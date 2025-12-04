@@ -8,7 +8,6 @@ import zote.db.repositories.*
 import zote.dto
 import zote.dto.*
 import zote.dto.form.*
-import zote.dto.validation.Validator
 
 trait NoteService {
   def getAll: Task[List[NoteHeader]]
@@ -47,7 +46,6 @@ case class NoteServiceImpl(
 
   override def create(noteForm: NoteForm): Task[Note] = transaction {
     for {
-      _          <- validateNote(noteForm)
       noteEntity <- toNoteEntity(noteForm)
       noteEntity <- noteRepository.upsert(noteEntity)
       _          <- updateDependencies(noteEntity.id, noteForm)
@@ -57,7 +55,6 @@ case class NoteServiceImpl(
 
   override def update(id: NoteId, noteForm: NoteForm): Task[Note] = transaction {
     for {
-      _          <- validateNote(noteForm)
       noteEntity <- noteRepository.getById(id)
       noteEntity <- toNoteEntity(noteForm, noteEntity)
       noteEntity <- noteRepository.upsert(noteEntity)
@@ -95,15 +92,6 @@ case class NoteServiceImpl(
       _ <- deleteDependencies(id) <&> detachChildren(id)
       _ <- noteRepository.delete(id)
     } yield ()
-  }
-
-  private def validateNote(noteForm: NoteForm) = {
-    Validator.validateZIO(noteForm)
-      <&> ZIO.foreachDiscard(noteForm.parentId)(noteRepository.getById)
-      <&> ZIO.foreachParDiscard(noteForm.assignees.map(_.personId))(
-        personRepository.getById,
-      )
-      <&> ZIO.foreachParDiscard(noteForm.labels)(labelRepository.getById)
   }
 
   private def deleteDependencies(noteId: NoteId): Task[Unit] = {

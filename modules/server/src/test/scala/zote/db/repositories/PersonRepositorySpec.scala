@@ -75,6 +75,25 @@ object PersonRepositorySpec extends ZIOSpecDefault {
           }
         },
       ),
+      suite("provides function 'findByName' that")(
+        test("returns option with PersonEntity if exists") {
+          for {
+            person            <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            personRepository  <- ZIO.service[PersonRepository]
+            maybePersonEntity <- personRepository.findByName(person.name)
+          } yield assertTrue {
+            maybePersonEntity.contains(person)
+          }
+        },
+        test("returns empty option if not exists") {
+          for {
+            personRepository  <- ZIO.service[PersonRepository]
+            maybePersonEntity <- personRepository.findByName("Ala")
+          } yield assertTrue {
+            maybePersonEntity.isEmpty
+          }
+        },
+      ),
       suite("provides function 'upsert' that")(
         test("inserts and returns PersonEntity if not exists") {
           for {

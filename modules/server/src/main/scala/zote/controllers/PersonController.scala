@@ -6,9 +6,11 @@ import zio.*
 import zote.Ids.PersonId
 import zote.endpoints.PersonEndpoints
 import zote.services.PersonService
+import zote.services.validation.PersonValidationService
 
 class PersonController(
     private val personService: PersonService,
+    private val personValidationService: PersonValidationService,
 ) extends Controller
     with PersonEndpoints {
 
@@ -20,12 +22,20 @@ class PersonController(
     personService.getById(PersonId(id))
   }
 
-  private val create = createEndpoint.zServerLogic[Any] { personsForm =>
-    personService.create(personsForm)
+  private val create = createEndpoint.zServerLogic[Any] { personForm =>
+    for {
+      personForm <- personValidationService.validateForCreate(personForm)
+      person     <- personService.create(personForm)
+    } yield person
+
   }
 
-  private val update = updateEndpoint.zServerLogic[Any] { (id, personsForm) =>
-    personService.update(PersonId(id), personsForm)
+  private val update = updateEndpoint.zServerLogic[Any] { (id, personForm) =>
+    for {
+      id         <- ZIO.succeed(PersonId(id))
+      personForm <- personValidationService.validateForUpdate(id, personForm)
+      person     <- personService.update(id, personForm)
+    } yield person
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>

@@ -9,6 +9,7 @@ import zote.controllers.*
 import zote.db.QuillContext
 import zote.db.repositories.*
 import zote.services.*
+import zote.services.validation.{LabelValidationServiceImpl, NoteValidationServiceImpl, PersonValidationServiceImpl}
 
 object MainApp extends ZIOAppDefault {
 
@@ -44,6 +45,9 @@ object MainApp extends ZIOAppDefault {
       NoteServiceImpl.layer,
       LabelServiceImpl.layer,
       PersonServiceImpl.layer,
+      NoteValidationServiceImpl.layer,
+      PersonValidationServiceImpl.layer,
+      LabelValidationServiceImpl.layer,
       NoteRepositoryImpl.layer,
       LabelRepositoryImpl.layer,
       PersonRepositoryImpl.layer,
@@ -54,7 +58,7 @@ object MainApp extends ZIOAppDefault {
       SLF4JConfig.layer,
       DataSourceConfig.layer,
       InitHelper.layer,
-//      ZLayer.Debug.mermaid
+//      ZLayer.Debug.mermaid,
     )
     .exitCode
 }

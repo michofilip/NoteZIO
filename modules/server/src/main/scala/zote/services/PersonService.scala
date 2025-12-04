@@ -7,7 +7,6 @@ import zote.db.model.PersonEntity
 import zote.db.repositories.{NotePersonRepository, PersonRepository}
 import zote.dto.Person
 import zote.dto.form.PersonForm
-import zote.dto.validation.Validator
 
 trait PersonService {
   def getAll: Task[List[Person]]
@@ -41,7 +40,6 @@ case class PersonServiceImpl(
 
   override def create(personForm: PersonForm): Task[Person] = transaction {
     for {
-      _            <- Validator.validateZIO(personForm)
       personEntity <- toPersonEntity(personForm)
       personEntity <- personRepository.upsert(personEntity)
       person       <- toPerson(personEntity)
@@ -51,7 +49,6 @@ case class PersonServiceImpl(
   override def update(id: PersonId, personForm: PersonForm): Task[Person] =
     transaction {
       for {
-        _            <- Validator.validateZIO(personForm)
         personEntity <- personRepository.getById(id)
         personEntity <- toPersonEntity(personForm, personEntity)
         personEntity <- personRepository.upsert(personEntity)

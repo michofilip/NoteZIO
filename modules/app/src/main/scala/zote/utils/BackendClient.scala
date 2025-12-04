@@ -1,9 +1,9 @@
 package zote.utils
 
-import sttp.client3.*
-import sttp.client3.impl.zio.FetchZioBackend
+import sttp.client4.*
+import sttp.client4.impl.zio.FetchZioBackend
 import sttp.tapir.Endpoint
-import sttp.tapir.client.sttp.SttpClientInterpreter
+import sttp.tapir.client.sttp4.SttpClientInterpreter
 import zio.*
 import zote.config.BackendClientConfig
 import zote.dto.{Note, NoteHeader, Person}
@@ -28,7 +28,8 @@ case class BackendClient(
 
   private def request[I, E, O](
       endpoint: Endpoint[Unit, I, E, O, Any]
-  ): I => Request[Either[E, O], Any] = {
+  ): I => Request[Either[E, O]] = {
+//  ): I => Request[Either[E, O], Any] = {
     interpreter.toRequestThrowDecodeFailures(endpoint, Some(config.baseUri))
   }
 
