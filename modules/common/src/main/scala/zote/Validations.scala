@@ -29,19 +29,6 @@ object Validations {
       .map(_._1)
   }
 
-//  def validateOptionalV2[T](label: String, value: Option[T])(
-//      v:
-//  )(
-//    validations: ((String, Option[T]) => Validation[String, Option[T]])*,
-//  ): Validation[String, Option[T]] = {
-//    Validation
-//      .validate(
-//        Validation.succeed(value),
-//        Validation.validateAll(validations.map(_(label, value))),
-//      )
-//      .map(_._1)
-//  }
-
   def min(min: Int, inclusive: Boolean = true)(
       label: String,
       value: Option[Int],
@@ -49,7 +36,7 @@ object Validations {
     def isValid(value: Int) = if (inclusive) value >= min else value > min
 
     def error =
-      if (inclusive) s"$label must be more or equal then $min"
+      if (inclusive) s"$label must be more or equal to $min"
       else s"$label must be more then $min"
 
     validateIfPresent(value, isValid, error)
@@ -62,7 +49,7 @@ object Validations {
     def isValid(value: Int) = if (inclusive) value <= max else value < max
 
     def error =
-      if (inclusive) s"$label must be less or equal then $max"
+      if (inclusive) s"$label must be less or equal to $max"
       else s"$label must be less then $max"
 
     validateIfPresent(value, isValid, error)
@@ -94,7 +81,7 @@ object Validations {
   ): Validation[String, Option[String]] = {
     def isValid(value: String) = if (inclusive) value.length >= minLength else value.length > minLength
     def error =
-      if (inclusive) s"$label must be longer or equal then $minLength"
+      if (inclusive) s"$label must be longer or equal to $minLength"
       else s"$label must be longer then $minLength"
 
     validateIfPresent(value, isValid, error)
@@ -106,7 +93,7 @@ object Validations {
   ): Validation[String, Option[String]] = {
     def isValid(value: String) = if (inclusive) value.length <= maxLength else value.length < maxLength
     def error =
-      if (inclusive) s"$label must be shorter or equal then $maxLength"
+      if (inclusive) s"$label must be shorter or equal to $maxLength"
       else s"$label must be shorter then $maxLength"
 
     validateIfPresent(value, isValid, error)

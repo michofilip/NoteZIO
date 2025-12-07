@@ -39,7 +39,7 @@ case class PersonValidationServiceImpl(
   }
 
   inline private def notFound(personForm: PersonForm): Task[Unit] = {
-    ZIO.fail(ValidationException(s"Label name: ${personForm.name} is already taken"))
+    ZIO.fail(ValidationException(s"name ${personForm.name} already exists"))
   }
 
 }
