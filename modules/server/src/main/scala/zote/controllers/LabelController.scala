@@ -4,7 +4,10 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
 import zote.Ids.LabelId
-import zote.dto.response.{EmptyResponse, LabelResponse, LabelsResponse, Response}
+import zote.dto.response.EmptyResponse.given
+import zote.dto.response.LabelResponse.given
+import zote.dto.response.LabelsResponse.given
+import zote.dto.response.Response
 import zote.endpoints.LabelEndpoints
 import zote.services.LabelService
 import zote.services.validation.LabelValidationService

@@ -4,7 +4,10 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
 import zote.Ids.NoteId
-import zote.dto.response.{NoteResponse, NotesResponse, Response}
+import zote.dto.response.EmptyResponse.given
+import zote.dto.response.NoteResponse.given
+import zote.dto.response.NotesResponse.given
+import zote.dto.response.Response
 import zote.endpoints.NoteEndpoints
 import zote.services.NoteService
 import zote.services.validation.NoteValidationService

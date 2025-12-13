@@ -4,7 +4,10 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
 import zote.Ids.PersonId
-import zote.dto.response.{PersonResponse, PersonsResponse, Response}
+import zote.dto.response.EmptyResponse.given
+import zote.dto.response.PersonResponse.given
+import zote.dto.response.PersonsResponse.given
+import zote.dto.response.Response
 import zote.endpoints.PersonEndpoints
 import zote.services.PersonService
 import zote.services.validation.PersonValidationService
