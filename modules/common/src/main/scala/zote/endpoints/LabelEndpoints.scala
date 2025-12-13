@@ -12,21 +12,18 @@ trait LabelEndpoints extends Endpoints {
 
   val getAllEndpoint =
     jsonEndpoint[List[Label], LabelsResponse]
-      .name("getAll")
       .description("getAll")
       .get
       .in(tag)
 
   val getByIdEndpoint =
     jsonEndpoint[Label, LabelResponse]
-      .name("getById")
       .description("getById")
       .get
       .in(tag / path[Long]("id"))
 
   val createEndpoint =
     jsonEndpoint[Label, LabelResponse]
-      .name("create")
       .description("create")
       .post
       .in(tag)
@@ -34,7 +31,6 @@ trait LabelEndpoints extends Endpoints {
 
   val updateEndpoint =
     jsonEndpoint[Label, LabelResponse]
-      .name("update")
       .description("update")
       .put
       .in(tag / path[Long]("id"))
@@ -42,7 +38,6 @@ trait LabelEndpoints extends Endpoints {
 
   val deleteEndpoint =
     jsonEndpoint[Nothing, EmptyResponse]
-      .name("delete")
       .description("delete")
       .delete
       .in(tag / path[Long]("id"))

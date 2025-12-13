@@ -12,21 +12,18 @@ trait NoteEndpoints extends Endpoints {
 
   val getAllEndpoint =
     jsonEndpoint[List[NoteHeader], NotesResponse]
-      .name("getAll")
       .description("getAll")
       .get
       .in(tag)
 
   val getByIdEndpoint =
     jsonEndpoint[Note, NoteResponse]
-      .name("getById")
       .description("getById")
       .get
       .in(tag / path[Long]("id"))
 
   val createEndpoint =
     jsonEndpoint[Note, NoteResponse]
-      .name("create")
       .description("create")
       .post
       .in(tag)
@@ -34,7 +31,6 @@ trait NoteEndpoints extends Endpoints {
 
   val updateEndpoint =
     jsonEndpoint[Note, NoteResponse]
-      .name("update")
       .description("update")
       .put
       .in(tag / path[Long]("id"))
@@ -42,7 +38,6 @@ trait NoteEndpoints extends Endpoints {
 
   val deleteEndpoint =
     jsonEndpoint[Nothing, EmptyResponse]
-      .name("delete")
       .description("delete")
       .delete
       .in(tag / path[Long]("id"))

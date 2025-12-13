@@ -13,21 +13,18 @@ trait PersonEndpoints extends Endpoints {
 
   val getAllEndpoint =
     jsonEndpoint[List[Person], PersonsResponse]
-      .name("getAll")
       .description("getAll")
       .get
       .in(tag)
 
   val getByIdEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .name("getById")
       .description("getById")
       .get
       .in(tag / path[Long]("id"))
 
   val createEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .name("create")
       .description("create")
       .post
       .in(tag)
@@ -35,7 +32,6 @@ trait PersonEndpoints extends Endpoints {
 
   val updateEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .name("update")
       .description("update")
       .put
       .in(tag / path[Long]("id"))
@@ -43,7 +39,6 @@ trait PersonEndpoints extends Endpoints {
 
   val deleteEndpoint =
     jsonEndpoint[Nothing, EmptyResponse]
-      .name("delete")
       .description("delete")
       .delete
       .in(tag / path[Long]("id"))

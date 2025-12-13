@@ -17,6 +17,7 @@ trait Endpoints {
       .out(jsonBody[Res])
       .errorOut(statusCode and jsonBody[Res])
       .mapErrorOut[Throwable](Response.decode)(Response.encode)
+      .in("api" / "v1")
 
   protected def secureJsonEndpoint[T, Res <: Response[T]: {JsonCodec, Schema}](using ResponseInitializer[T, Res]) =
     jsonEndpoint.securityIn(auth.bearer[String]())
