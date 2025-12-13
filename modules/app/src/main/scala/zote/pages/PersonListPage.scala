@@ -10,7 +10,7 @@ object PersonListPage {
     val persons = Var(List.empty[Person])
 
     div(
-      onMountCallback(_ => BackendClient.persons.getAll(persons.set)),
+//      onMountCallback(_ => BackendClient.persons.getAll(persons.set)),
       h1("Person list"),
       PersonsTable(persons.signal),
     )

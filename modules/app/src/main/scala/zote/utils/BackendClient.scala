@@ -6,6 +6,7 @@ import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp4.SttpClientInterpreter
 import zio.*
 import zote.config.BackendClientConfig
+import zote.dto.response.{NoteResponse, NotesResponse, PersonResponse, PersonsResponse}
 import zote.dto.{Note, NoteHeader, Person}
 import zote.endpoints.{NoteEndpoints, PersonEndpoints}
 
@@ -40,20 +41,20 @@ object BackendClient {
   object notes {
     private val noteEndpoints: NoteEndpoints = new NoteEndpoints {}
 
-    def getAll(consumer: List[NoteHeader] => Unit) =
+    def getAll(consumer: NotesResponse => Unit) =
       performRequest(noteEndpoints.getAllEndpoint)(())(consumer)
 
-    def getById(id: Long)(consumer: Note => Unit) =
+    def getById(id: Long)(consumer: NoteResponse => Unit) =
       performRequest(noteEndpoints.getByIdEndpoint)(id)(consumer)
   }
 
   object persons {
     private val personEndpoints: PersonEndpoints = new PersonEndpoints {}
 
-    def getAll(consumer: List[Person] => Unit) =
+    def getAll(consumer: PersonsResponse => Unit) =
       performRequest(personEndpoints.getAllEndpoint)(())(consumer)
 
-    def getById(id: Long)(consumer: Person => Unit) =
+    def getById(id: Long)(consumer: PersonResponse => Unit) =
       performRequest(personEndpoints.getByIdEndpoint)(id)(consumer)
   }
 

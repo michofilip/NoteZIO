@@ -10,7 +10,7 @@ object NoteListPage {
     val noteHeaders = Var(List.empty[NoteHeader])
 
     div(
-      onMountCallback(_ => BackendClient.notes.getAll(noteHeaders.set)),
+//      onMountCallback(_ => BackendClient.notes.getAll(noteHeaders.set)),
       h1("Note list"),
       NoteHeadersTable(noteHeaders.signal),
     )
