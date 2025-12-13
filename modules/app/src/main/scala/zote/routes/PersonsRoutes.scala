@@ -15,7 +15,7 @@ object PersonsRoutes {
       },
       noneMatched {
         NotFoundPage()
-      }
+      },
     )
   }
 }

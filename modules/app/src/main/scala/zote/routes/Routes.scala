@@ -22,8 +22,8 @@ object Routes {
         },
         noneMatched {
           NotFoundPage()
-        }
-      )
+        },
+      ),
     )
   }
 }

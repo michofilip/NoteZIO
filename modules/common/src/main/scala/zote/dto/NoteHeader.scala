@@ -1,5 +1,6 @@
 package zote.dto
 
+import sttp.tapir.Schema
 import zio.json.JsonCodec
 import zote.Ids.NoteId
 import zote.enums.NoteStatus
@@ -9,4 +10,5 @@ case class NoteHeader(
     title: String,
     status: NoteStatus,
     labels: Option[List[Label]],
-) derives JsonCodec
+) derives JsonCodec,
+      Schema

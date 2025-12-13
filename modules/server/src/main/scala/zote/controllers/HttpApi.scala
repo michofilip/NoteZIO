@@ -9,14 +9,12 @@ object HttpApi {
   def endpointsZIO = controllers.map(_.flatMap(_.endpoints))
 
   private def controllers = for {
-    healthController <- ZIO.service[HealthController]
-    noteController <- ZIO.service[NoteController]
+    noteController   <- ZIO.service[NoteController]
     personController <- ZIO.service[PersonController]
-    labelController <- ZIO.service[LabelController]
+    labelController  <- ZIO.service[LabelController]
   } yield List(
-    healthController,
     noteController,
     personController,
-    labelController
+    labelController,
   )
 }

@@ -6,7 +6,7 @@ import frontroute.*
 object LabelListPage {
   def apply() = {
     h1(
-      "Label list"
+      "Label list",
     )
   }
 }

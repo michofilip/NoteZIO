@@ -246,7 +246,7 @@ case class NoteServiceImpl(
   ): Task[Option[List[NotePerson]]] = {
     for {
       notePersonEntities <- notePersonRepository.findAllByNoteId(noteEntity.id)
-      maybeNotePersons <- ZIO
+      maybeNotePersons   <- ZIO
         .foreachPar(notePersonEntities) { notePersonEntity =>
           personService.getById(notePersonEntity.personId).map { person =>
             NotePerson(

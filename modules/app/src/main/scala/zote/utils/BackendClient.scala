@@ -10,15 +10,15 @@ import zote.dto.{Note, NoteHeader, Person}
 import zote.endpoints.{NoteEndpoints, PersonEndpoints}
 
 case class BackendClient(
-    private val config: BackendClientConfig
+    private val config: BackendClientConfig,
 //    private val interpreter: SttpClientInterpreter,
 //    private val backend: SttpBackend[Task, ZioStreams & WebSockets]
 ) {
-  private val backend = FetchZioBackend()
+  private val backend     = FetchZioBackend()
   private val interpreter = SttpClientInterpreter()
 
   private def requestZIO[I, E <: Throwable, O](
-      endpoint: Endpoint[Unit, I, E, O, Any]
+      endpoint: Endpoint[Unit, I, E, O, Any],
   )(payload: I): Task[O] = {
     backend
       .send(request(endpoint)(payload))
@@ -27,7 +27,7 @@ case class BackendClient(
   }
 
   private def request[I, E, O](
-      endpoint: Endpoint[Unit, I, E, O, Any]
+      endpoint: Endpoint[Unit, I, E, O, Any],
   ): I => Request[Either[E, O]] = {
 //  ): I => Request[Either[E, O], Any] = {
     interpreter.toRequestThrowDecodeFailures(endpoint, Some(config.baseUri))
@@ -60,17 +60,15 @@ object BackendClient {
   private val layer = BackendClientConfig.layer >>> ZLayer.derive[BackendClient]
 
   private def performRequest[I, E <: Throwable, O](
-      endpoint: Endpoint[Unit, I, E, O, Any]
+      endpoint: Endpoint[Unit, I, E, O, Any],
   )(payload: I)(consumer: O => Unit): Fiber.Runtime[Throwable, O] = {
     Unsafe.unsafe { case given Unsafe =>
       Runtime.default.unsafe.fork(
         ZIO
           .serviceWithZIO[BackendClient](
-            _.requestZIO(endpoint)(payload).tap(value =>
-              ZIO.attempt(consumer(value))
-            )
+            _.requestZIO(endpoint)(payload).tap(value => ZIO.attempt(consumer(value))),
           )
-          .provide(layer)
+          .provide(layer),
       )
     }
   }

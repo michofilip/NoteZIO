@@ -18,7 +18,7 @@ object MainApp extends ZIOAppDefault {
 
     routes        <- HttpApi.routesZIO
     swaggerRoutes <- SwaggerApi.routesZIO
-    port <- Server.install(
+    port          <- Server.install(
       ZioHttpInterpreter(
         ZioHttpServerOptions.default.appendInterceptor(
           CORSInterceptor.default,
@@ -38,7 +38,6 @@ object MainApp extends ZIOAppDefault {
     .provide(
       FlywayServiceImpl.layer,
       FlywayConfig.layer,
-      HealthController.layer,
       NoteController.layer,
       PersonController.layer,
       LabelController.layer,

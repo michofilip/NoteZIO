@@ -15,7 +15,7 @@ object LabelsRoutes {
       },
       noneMatched {
         NotFoundPage()
-      }
+      },
     )
   }
 }

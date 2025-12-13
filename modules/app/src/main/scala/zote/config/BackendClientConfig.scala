@@ -5,7 +5,7 @@ import sttp.model.Uri
 import zio.ZLayer
 
 case class BackendClientConfig(
-    baseUri: Uri
+    baseUri: Uri,
 )
 
 object BackendClientConfig {

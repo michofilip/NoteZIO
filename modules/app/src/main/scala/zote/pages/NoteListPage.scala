@@ -12,7 +12,7 @@ object NoteListPage {
     div(
       onMountCallback(_ => BackendClient.notes.getAll(noteHeaders.set)),
       h1("Note list"),
-      NoteHeadersTable(noteHeaders.signal)
+      NoteHeadersTable(noteHeaders.signal),
     )
   }
 }

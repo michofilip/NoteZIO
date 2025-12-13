@@ -15,7 +15,7 @@ object NotesRoutes {
       },
       noneMatched {
         NotFoundPage()
-      }
+      },
     )
   }
 }

@@ -1,5 +1,6 @@
 package zote.dto
 
+import sttp.tapir.Schema
 import zio.json.JsonCodec
 
 case class Note(
@@ -8,4 +9,5 @@ case class Note(
     assignees: Option[List[NotePerson]],
     parentNote: Option[NoteHeader],
     childrenNotes: Option[List[NoteHeader]],
-) derives JsonCodec
+) derives JsonCodec,
+      Schema

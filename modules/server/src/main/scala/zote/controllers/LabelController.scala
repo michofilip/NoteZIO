@@ -4,6 +4,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
 import zote.Ids.LabelId
+import zote.dto.response.{EmptyResponse, LabelResponse, LabelsResponse, Response}
 import zote.endpoints.LabelEndpoints
 import zote.services.LabelService
 import zote.services.validation.LabelValidationService
@@ -15,18 +16,18 @@ class LabelController(
     with LabelEndpoints {
 
   private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
-    labelService.getAll
+    labelService.getAll.map(labels => Response.success(labels))
   }
 
   private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-    labelService.getById(LabelId(id))
+    labelService.getById(LabelId(id)).map(label => Response.success(label))
   }
 
   private val create = createEndpoint.zServerLogic[Any] { labelForm =>
     for {
       labelForm <- labelValidationService.validate(labelForm)
       label     <- labelService.create(labelForm)
-    } yield label
+    } yield Response.success(label)
   }
 
   private val update = updateEndpoint.zServerLogic[Any] { (id, labelForm) =>
@@ -34,11 +35,11 @@ class LabelController(
       id        <- ZIO.succeed(LabelId(id))
       labelForm <- labelValidationService.validate(labelForm)
       label     <- labelService.update(id, labelForm)
-    } yield label
+    } yield Response.success(label)
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    labelService.delete(LabelId(id))
+    labelService.delete(LabelId(id)).as(Response.success)
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(

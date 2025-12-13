@@ -7,7 +7,7 @@ object Header {
     div(
       div(a(href := "/notes", "Notes")),
       div(a(href := "/persons", "Persons")),
-      div(a(href := "/labels", "Labels"))
+      div(a(href := "/labels", "Labels")),
     )
   }
 }

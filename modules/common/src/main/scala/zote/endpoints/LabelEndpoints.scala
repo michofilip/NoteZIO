@@ -3,53 +3,49 @@ package zote.endpoints
 import sttp.tapir.*
 import sttp.tapir.generic.auto.*
 import sttp.tapir.json.zio.jsonBody
-import zio.*
 import zote.dto.Label
 import zote.dto.form.LabelForm
+import zote.dto.response.{EmptyResponse, LabelResponse, LabelsResponse}
 
 trait LabelEndpoints extends Endpoints {
+  override protected val tag: String = "labels"
 
-  val getAllEndpoint = baseEndpoint
-    .tag("labels")
-    .name("getAll")
-    .description("getAll")
-    .get
-    .in("labels")
-    .out(jsonBody[List[Label]])
+  val getAllEndpoint =
+    jsonEndpoint[List[Label], LabelsResponse]
+      .name("getAll")
+      .description("getAll")
+      .get
+      .in(tag)
 
-  val getByIdEndpoint = baseEndpoint
-    .tag("labels")
-    .name("getById")
-    .description("getById")
-    .get
-    .in("label" / path[Long]("id"))
-    .out(jsonBody[Label])
+  val getByIdEndpoint =
+    jsonEndpoint[Label, LabelResponse]
+      .name("getById")
+      .description("getById")
+      .get
+      .in(tag / path[Long]("id"))
 
-  val createEndpoint = baseEndpoint
-    .tag("labels")
-    .name("create")
-    .description("create")
-    .post
-    .in("labels")
-    .in(jsonBody[LabelForm.Raw])
-    .out(jsonBody[Label])
+  val createEndpoint =
+    jsonEndpoint[Label, LabelResponse]
+      .name("create")
+      .description("create")
+      .post
+      .in(tag)
+      .in(jsonBody[LabelForm.Raw])
 
-  val updateEndpoint = baseEndpoint
-    .tag("labels")
-    .name("update")
-    .description("update")
-    .put
-    .in("labels" / path[Long]("id"))
-    .in(jsonBody[LabelForm.Raw])
-    .out(jsonBody[Label])
+  val updateEndpoint =
+    jsonEndpoint[Label, LabelResponse]
+      .name("update")
+      .description("update")
+      .put
+      .in(tag / path[Long]("id"))
+      .in(jsonBody[LabelForm.Raw])
 
-  val deleteEndpoint = baseEndpoint
-    .tag("labels")
-    .name("delete")
-    .description("delete")
-    .delete
-    .in("labels" / path[Long]("id"))
-    .out(emptyOutput)
+  val deleteEndpoint =
+    jsonEndpoint[Nothing, EmptyResponse]
+      .name("delete")
+      .description("delete")
+      .delete
+      .in(tag / path[Long]("id"))
 
   final override val endpoints: List[AnyEndpoint] = List(
     getAllEndpoint,

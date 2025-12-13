@@ -4,6 +4,7 @@ import sttp.tapir.server.ServerEndpoint
 import sttp.tapir.ztapir.*
 import zio.*
 import zote.Ids.PersonId
+import zote.dto.response.{PersonResponse, PersonsResponse, Response}
 import zote.endpoints.PersonEndpoints
 import zote.services.PersonService
 import zote.services.validation.PersonValidationService
@@ -15,18 +16,18 @@ class PersonController(
     with PersonEndpoints {
 
   private val getAll = getAllEndpoint.zServerLogic[Any] { _ =>
-    personService.getAll
+    personService.getAll.map(persons => Response.success(persons))
   }
 
   private val getById = getByIdEndpoint.zServerLogic[Any] { id =>
-    personService.getById(PersonId(id))
+    personService.getById(PersonId(id)).map(person => Response.success(person))
   }
 
   private val create = createEndpoint.zServerLogic[Any] { personForm =>
     for {
       personForm <- personValidationService.validateForCreate(personForm)
       person     <- personService.create(personForm)
-    } yield person
+    } yield Response.success(person)
 
   }
 
@@ -35,11 +36,11 @@ class PersonController(
       id         <- ZIO.succeed(PersonId(id))
       personForm <- personValidationService.validateForUpdate(id, personForm)
       person     <- personService.update(id, personForm)
-    } yield person
+    } yield Response.success(person)
   }
 
   private val delete = deleteEndpoint.zServerLogic[Any] { id =>
-    personService.delete(PersonId(id))
+    personService.delete(PersonId(id)).as(Response.success)
   }
 
   override val routes: List[ServerEndpoint[Any, Task]] = List(

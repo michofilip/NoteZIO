@@ -12,7 +12,7 @@ object PersonListPage {
     div(
       onMountCallback(_ => BackendClient.persons.getAll(persons.set)),
       h1("Person list"),
-      PersonsTable(persons.signal)
+      PersonsTable(persons.signal),
     )
   }
 }

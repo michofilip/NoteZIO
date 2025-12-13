@@ -9,17 +9,15 @@ object PersonPage {
     val person = Var[Option[Person]](None)
 
     div(
-      onMountCallback(_ =>
-        BackendClient.persons.getById(personId)(p => person.set(Some(p)))
-      ),
+      onMountCallback(_ => BackendClient.persons.getById(personId)(p => person.set(Some(p)))),
       div(
         child <-- person.signal.map(_.map { person =>
           div(
             div("Name"),
-            div(person.name)
+            div(person.name),
           )
-        }.getOrElse(emptyNode))
-      )
+        }.getOrElse(emptyNode)),
+      ),
     )
   }
 }

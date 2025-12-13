@@ -13,14 +13,14 @@ object App {
       dom.document.getElementById("app"),
 //      Demo3.appElement().amend(LinkHandler.bind)
       app()
-        .amend(LinkHandler.bind)
+        .amend(LinkHandler.bind),
     )
   }
 
   private def app() = {
     div(
       Header(),
-      Routes()
+      Routes(),
     )
   }
 
@@ -30,20 +30,20 @@ object App {
       div(
         "Button was clicked: ",
         child <-- clicks.signal.map(_.toString),
-        " times"
+        " times",
       ),
       div(
         button(
           tpe := "button",
           onClick --> (_ => clicks.update(_ + 1)),
-          "+"
+          "+",
         ),
         button(
           tpe := "button",
           onClick --> (_ => clicks.update(_ - 1)),
-          "-"
-        )
-      )
+          "-",
+        ),
+      ),
     )
   }
 
@@ -56,7 +56,7 @@ object App {
         id: DataItemID,
         label: String,
         price: Double,
-        count: Int
+        count: Int,
     ) {
       def fullPrice: Double = price * count
     }
@@ -68,7 +68,7 @@ object App {
           dataItemID,
           s"Item ${dataItemID.value}",
           Random.between(10, 100000) / 100.0,
-          Random.nextInt(5) + 1
+          Random.nextInt(5) + 1,
         )
     }
 
@@ -78,7 +78,7 @@ object App {
       val idVar = Var(1L)
 
       val dataVar: Var[DataList] = Var(
-        List.empty
+        List.empty,
       )
       val dataSignal = dataVar.signal
 
@@ -97,7 +97,7 @@ object App {
       table(
         renderTableHeader(),
         renderTableBody(),
-        renderTableFooter()
+        renderTableFooter(),
       )
     }
 
@@ -109,8 +109,8 @@ object App {
           th("Price"),
           th("Count"),
           th("Total price"),
-          th("Remove")
-        )
+          th("Remove"),
+        ),
       )
     }
 
@@ -118,7 +118,7 @@ object App {
       tbody(
         children <-- Model.dataSignal.split(_.id) { case (id, _, signal) =>
           renderRow(id, signal)
-        }
+        },
       )
     }
 
@@ -129,12 +129,12 @@ object App {
             tpe := "button",
             onClick --> (_ => {
               Model.addDataItem(
-                DataItem(DataItemID(Model.idVar.signal.now()))
+                DataItem(DataItemID(Model.idVar.signal.now())),
               )
               Model.idVar.update(_ + 1)
             }),
-            "Add item"
-          )
+            "Add item",
+          ),
         ),
         th(),
         th(),
@@ -142,36 +142,34 @@ object App {
         th(
           child <-- Model.dataSignal
             .map(_.map(_.fullPrice).sum)
-            .map(sum => f"$sum%.2f zł")
+            .map(sum => f"$sum%.2f zł"),
         ),
-        th()
+        th(),
       )
 
     }
 
     private def renderRow(
         dataItemID: DataItemID,
-        dataItemSignal: Signal[DataItem]
+        dataItemSignal: Signal[DataItem],
     ) = {
       tr(
         td(dataItemID.value),
         td(child <-- dataItemSignal.map(_.label)),
         td(
-          child <-- dataItemSignal.map(dataItem => f"${dataItem.price}%.2f zł")
+          child <-- dataItemSignal.map(dataItem => f"${dataItem.price}%.2f zł"),
         ),
         td((child <-- dataItemSignal.map(_.count))),
         td(
-          child <-- dataItemSignal.map(dataItem =>
-            f"${dataItem.fullPrice}%.2f zł"
-          )
+          child <-- dataItemSignal.map(dataItem => f"${dataItem.fullPrice}%.2f zł"),
         ),
         td(
           button(
             tpe := "button",
             onClick --> (_ => Model.removeDataItem(dataItemID)),
-            "Remove"
-          )
-        )
+            "Remove",
+          ),
+        ),
       )
 
     }
@@ -189,9 +187,9 @@ object App {
             path("news") {
               div("News")
             },
-            div("Not found")
-          )
-        )
+            div("Not found"),
+          ),
+        ),
 //        div(
 //          path("blog") {
 //            div("Blog")

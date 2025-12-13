@@ -2,8 +2,7 @@ package zote.exceptions
 
 import zio.prelude.Associative
 
-case class ValidationException(messages: Set[String])
-    extends RuntimeException {
+case class ValidationException(messages: Set[String]) extends RuntimeException {
   override def getMessage: String = messages.mkString(";")
 }
 

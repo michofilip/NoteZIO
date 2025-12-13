@@ -20,7 +20,7 @@ case class PersonValidationServiceImpl(
         .mapError(ValidationException.apply)
         .toZIOAssociative
       maybePersonEntity <- personRepository.findByName(personForm.name)
-      _ <- ZIO.when(maybePersonEntity.exists(_.name == personForm.name)) {
+      _                 <- ZIO.when(maybePersonEntity.exists(_.name == personForm.name)) {
         notFound(personForm)
       }
     } yield personForm
