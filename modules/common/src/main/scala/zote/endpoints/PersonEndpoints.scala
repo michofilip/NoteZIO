@@ -13,33 +13,33 @@ trait PersonEndpoints extends Endpoints {
 
   val getAllEndpoint =
     jsonEndpoint[List[Person], PersonsResponse]
-      .description("getAll")
+      .description("Returns a list of all persons. [GET] /api/v1/persons")
       .get
       .in(tag)
 
   val getByIdEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .description("getById")
+      .description("Returns details of a person by its identifier. [GET] /api/v1/persons/{id}")
       .get
       .in(tag / path[Long]("id"))
 
   val createEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .description("create")
+      .description("Creates a new person and returns the created object. [POST] /api/v1/persons")
       .post
       .in(tag)
       .in(jsonBody[PersonForm.Raw])
 
   val updateEndpoint =
     jsonEndpoint[Person, PersonResponse]
-      .description("update")
+      .description("Updates a person by its identifier and returns the updated object. [PUT] /api/v1/persons/{id}")
       .put
       .in(tag / path[Long]("id"))
       .in(jsonBody[PersonForm.Raw])
 
   val deleteEndpoint =
     jsonEndpoint[Nothing, EmptyResponse]
-      .description("delete")
+      .description("Deletes a person by its identifier. [DELETE] /api/v1/persons/{id}")
       .delete
       .in(tag / path[Long]("id"))
 
