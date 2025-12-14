@@ -42,22 +42,22 @@ object Ids {
     given Schema[LabelId] = Schema.schemaForLong
   }
 
-  opaque type PersonId = Long
+  opaque type UserId = Long
 
-  object PersonId {
-    def apply(value: Long): PersonId = value
-    val zero: PersonId               = PersonId(0)
+  object UserId {
+    def apply(value: Long): UserId = value
+    val zero: UserId               = UserId(0)
 
-    extension (personId: PersonId) {
-      def value: Long     = personId
-      def isZero: Boolean = personId == zero
+    extension (userId: UserId) {
+      def value: Long     = userId
+      def isZero: Boolean = userId == zero
     }
 
-    given JsonCodec[PersonId] = JsonCodec[PersonId](
+    given JsonCodec[UserId] = JsonCodec[UserId](
       JsonEncoder[Long].contramap(_.value),
       JsonDecoder[Long].map(NoteId.apply),
     )
 
-    given Schema[PersonId] = Schema.schemaForLong
+    given Schema[UserId] = Schema.schemaForLong
   }
 }

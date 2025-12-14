@@ -7,9 +7,9 @@ import zote.db.QuillContext
 import zote.db.repositories.*
 import zote.server.AppServer
 import zote.services.*
-import zote.services.validation.{LabelValidationServiceImpl, NoteValidationServiceImpl, PersonValidationServiceImpl}
+import zote.services.validation.{LabelValidationServiceImpl, NoteValidationServiceImpl, UserValidationServiceImpl}
 
-object MainApp extends ZIOAppDefault {
+object Main extends ZIOAppDefault {
 
   private val app = for {
     _    <- FlywayService.run
@@ -26,18 +26,18 @@ object MainApp extends ZIOAppDefault {
       FlywayServiceImpl.layer,
       FlywayConfig.layer,
       NoteController.layer,
-      PersonController.layer,
+      UserController.layer,
       LabelController.layer,
       NoteServiceImpl.layer,
       LabelServiceImpl.layer,
-      PersonServiceImpl.layer,
+      UserServiceImpl.layer,
       NoteValidationServiceImpl.layer,
-      PersonValidationServiceImpl.layer,
+      UserValidationServiceImpl.layer,
       LabelValidationServiceImpl.layer,
       NoteRepositoryImpl.layer,
       LabelRepositoryImpl.layer,
-      PersonRepositoryImpl.layer,
-      NotePersonRepositoryImpl.layer,
+      UserRepositoryImpl.layer,
+      NoteUserRepositoryImpl.layer,
       NoteLabelRepositoryImpl.layer,
       QuillContext.layer,
       ServerConfig.layer,

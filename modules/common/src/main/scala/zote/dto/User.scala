@@ -2,10 +2,10 @@ package zote.dto
 
 import sttp.tapir.Schema
 import zio.json.JsonCodec
-import zote.enums.NotePersonRole
+import zote.Ids.UserId
 
-case class NotePerson(
-    person: Person,
-    role: NotePersonRole,
+case class User(
+    id: UserId,
+    name: String,
 ) derives JsonCodec,
       Schema

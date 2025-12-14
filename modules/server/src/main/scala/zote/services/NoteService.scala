@@ -25,10 +25,10 @@ case class NoteServiceImpl(
     private val labelRepository: LabelRepository,
     private val labelService: LabelService,
     private val noteLabelRepository: NoteLabelRepository,
-    private val notePersonRepository: NotePersonRepository,
+    private val noteUserRepository: NoteUserRepository,
     private val noteRepository: NoteRepository,
-    private val personRepository: PersonRepository,
-    private val personService: PersonService,
+    private val userRepository: UserRepository,
+    private val userService: UserService,
     private val quillContext: QuillContext,
 ) extends NoteService {
 
@@ -101,13 +101,13 @@ case class NoteServiceImpl(
       }
     }
 
-    val deleteNotePersonEntities = notePersonRepository.findAllByNoteId(noteId).flatMap { notePersonEntities =>
-      ZIO.foreachParDiscard(notePersonEntities) { notePersonEntity =>
-        notePersonRepository.delete(notePersonEntity.noteId, notePersonEntity.personId)
+    val deleteNoteUserEntities = noteUserRepository.findAllByNoteId(noteId).flatMap { noteUserEntities =>
+      ZIO.foreachParDiscard(noteUserEntities) { noteUserEntity =>
+        noteUserRepository.delete(noteUserEntity.noteId, noteUserEntity.userId)
       }
     }
 
-    deleteNoteLabelEntities <&> deleteNotePersonEntities
+    deleteNoteLabelEntities <&> deleteNoteUserEntities
   }
 
   private def detachChildren(noteId: NoteId): Task[Unit] = {
@@ -122,36 +122,36 @@ case class NoteServiceImpl(
       noteId: NoteId,
       noteForm: NoteForm,
   ): Task[Unit] = {
-    updateNotePersons(noteId, noteForm.assignees.toSeq) <&> updateNoteLabels(noteId, noteForm.labels.toSeq)
+    updateNoteUsers(noteId, noteForm.assignees.toSeq) <&> updateNoteLabels(noteId, noteForm.labels.toSeq)
   }
 
-  private def updateNotePersons(
+  private def updateNoteUsers(
       noteId: NoteId,
-      notePersons: Seq[NotePersonForm],
+      noteUserForms: Seq[NoteUserForm],
   ): Task[Unit] = {
     for {
-      currentNotePersonEntities <- notePersonRepository
+      currentNoteUserEntities <- noteUserRepository
         .findAllByNoteId(noteId)
-        .map(_.map(notePersonEntity => (notePersonEntity.personId, notePersonEntity.role) -> notePersonEntity).toMap)
-      newNotePersonEntities = notePersons.map { notePersonForm =>
-        (notePersonForm.personId, notePersonForm.role) -> NotePersonEntity(
+        .map(_.map(noteUserEntity => (noteUserEntity.userId, noteUserEntity.role) -> noteUserEntity).toMap)
+      newNoteUserEntities = noteUserForms.map { noteUserForm =>
+        (noteUserForm.userId, noteUserForm.role) -> NoteUserEntity(
           noteId = noteId,
-          personId = notePersonForm.personId,
-          role = notePersonForm.role,
+          userId = noteUserForm.userId,
+          role = noteUserForm.role,
         )
       }.toMap
 
-      currentVsNew = (currentNotePersonEntities.keySet ++ newNotePersonEntities.keySet).toList.map { key =>
-        (currentNotePersonEntities.get(key), newNotePersonEntities.get(key))
+      currentVsNew = (currentNoteUserEntities.keySet ++ newNoteUserEntities.keySet).toList.map { key =>
+        (currentNoteUserEntities.get(key), newNoteUserEntities.get(key))
       }
 
       _ <- ZIO.foreachParDiscard(currentVsNew) {
         case (Some(current), Some(entity)) if current.role != entity.role =>
-          notePersonRepository.upsert(entity)
+          noteUserRepository.upsert(entity)
         case (None, Some(entity)) =>
-          notePersonRepository.upsert(entity)
+          noteUserRepository.upsert(entity)
         case (Some(entity), None) =>
-          notePersonRepository.delete(entity.noteId, entity.personId)
+          noteUserRepository.delete(entity.noteId, entity.userId)
         case _ =>
           ZIO.unit
       }
@@ -243,20 +243,20 @@ case class NoteServiceImpl(
 
   private def getAssignees(
       noteEntity: NoteEntity,
-  ): Task[Option[List[NotePerson]]] = {
+  ): Task[Option[List[NoteUser]]] = {
     for {
-      notePersonEntities <- notePersonRepository.findAllByNoteId(noteEntity.id)
-      maybeNotePersons   <- ZIO
-        .foreachPar(notePersonEntities) { notePersonEntity =>
-          personService.getById(notePersonEntity.personId).map { person =>
-            NotePerson(
-              person = person,
-              role = notePersonEntity.role,
+      noteUserEntities <- noteUserRepository.findAllByNoteId(noteEntity.id)
+      maybeNoteUsers   <- ZIO
+        .foreachPar(noteUserEntities) { noteUserEntity =>
+          userService.getById(noteUserEntity.userId).map { user =>
+            NoteUser(
+              user = user,
+              role = noteUserEntity.role,
             )
           }
         }
-        .unless(notePersonEntities.isEmpty)
-    } yield maybeNotePersons
+        .unless(noteUserEntities.isEmpty)
+    } yield maybeNoteUsers
   }
 }
 

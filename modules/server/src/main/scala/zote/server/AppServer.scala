@@ -5,17 +5,17 @@ import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import sttp.tapir.swagger.bundle.SwaggerInterpreter
 import zio.*
 import zio.http.Server
-import zote.controllers.{Controller, LabelController, NoteController, PersonController}
+import zote.controllers.{Controller, LabelController, NoteController, UserController}
 import zote.endpoints.Endpoints
 
 case class AppServer(
     private val noteController: NoteController,
-    private val personController: PersonController,
+    private val userController: UserController,
     private val labelController: LabelController,
 ) {
   private val controllers: List[Controller & Endpoints] = List(
     noteController,
-    personController,
+    userController,
     labelController,
   )
 

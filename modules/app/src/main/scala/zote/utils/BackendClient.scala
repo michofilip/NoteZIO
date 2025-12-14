@@ -6,9 +6,9 @@ import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp4.SttpClientInterpreter
 import zio.*
 import zote.config.BackendClientConfig
-import zote.dto.response.{NoteResponse, NotesResponse, PersonResponse, PersonsResponse}
-import zote.dto.{Note, NoteHeader, Person}
-import zote.endpoints.{NoteEndpoints, PersonEndpoints}
+import zote.dto.response.{NoteResponse, NotesResponse, UserResponse, UsersResponse}
+import zote.dto.{Note, NoteHeader, User}
+import zote.endpoints.{NoteEndpoints, UserEndpoints}
 
 case class BackendClient(
     private val config: BackendClientConfig,
@@ -48,14 +48,14 @@ object BackendClient {
       performRequest(noteEndpoints.getByIdEndpoint)(id)(consumer)
   }
 
-  object persons {
-    private val personEndpoints: PersonEndpoints = new PersonEndpoints {}
+  object users {
+    private val userEndpoints: UserEndpoints = new UserEndpoints {}
 
-    def getAll(consumer: PersonsResponse => Unit) =
-      performRequest(personEndpoints.getAllEndpoint)(())(consumer)
+    def getAll(consumer: UsersResponse => Unit) =
+      performRequest(userEndpoints.getAllEndpoint)(())(consumer)
 
-    def getById(id: Long)(consumer: PersonResponse => Unit) =
-      performRequest(personEndpoints.getByIdEndpoint)(id)(consumer)
+    def getById(id: Long)(consumer: UserResponse => Unit) =
+      performRequest(userEndpoints.getByIdEndpoint)(id)(consumer)
   }
 
   private val layer = BackendClientConfig.layer >>> ZLayer.derive[BackendClient]

@@ -4,43 +4,43 @@ import zio.*
 import zio.test.*
 import zote.config.{DataSourceConfig, FlywayConfig}
 import zote.db.QuillContext
-import zote.db.model.PersonEntity
-import zote.db.repositories.PersonRepositoryImpl
-import zote.dto.form.PersonForm
+import zote.db.model.UserEntity
+import zote.db.repositories.UserRepositoryImpl
+import zote.dto.form.UserForm
 import zote.exceptions.ValidationException
 import zote.helpers.{DbHelper, TestAspectUtils}
 import zote.services.{FlywayService, FlywayServiceImpl}
 
-object PersonValidationServiceSpec extends ZIOSpecDefault {
+object UserValidationServiceSpec extends ZIOSpecDefault {
   override def spec: Spec[TestEnvironment & Scope, Any] = {
-    suite("PersonValidationService")(
+    suite("UserValidationService")(
       suite("provides function 'validateForCreate' that")(
-        test("returns valid PersonForm if correct") {
-          val personFormRaw =
-            PersonForm.Raw(
+        test("returns valid UserForm if correct") {
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("Ala"),
             )
 
           for {
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForCreate(personFormRaw).exit
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForCreate(userFormRaw).exit
           } yield assertTrue {
             result == Exit.succeed {
-              PersonForm(
+              UserForm(
                 name = "Ala",
               )
             }
           }
         },
         test("returns ValidationException if name is missing") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = None,
             )
 
           for {
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForCreate(personFormRaw).exit
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForCreate(userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name is required"))
@@ -48,14 +48,14 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name is too short") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("XX"),
             )
 
           for {
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForCreate(personFormRaw).exit
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForCreate(userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name must be longer or equal to 3"))
@@ -63,14 +63,14 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name is too long") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some(List.fill(256)("X").mkString),
             )
 
           for {
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForCreate(personFormRaw).exit
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForCreate(userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name must be shorter or equal to 255"))
@@ -78,15 +78,15 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name already exists") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("Ala"),
             )
 
           for {
-            _                       <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForCreate(personFormRaw).exit
+            _                       <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForCreate(userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name Ala already exists"))
@@ -95,34 +95,34 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
         },
       ),
       suite("provides function 'validateForUpdate' that")(
-        test("returns valid PersonForm if correct") {
-          val personFormRaw =
-            PersonForm.Raw(
+        test("returns valid UserForm if correct") {
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("Ela"),
             )
 
           for {
-            person                  <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForUpdate(person.id, personFormRaw).exit
+            user                  <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForUpdate(user.id, userFormRaw).exit
           } yield assertTrue {
             result == Exit.succeed {
-              PersonForm(
+              UserForm(
                 name = "Ela",
               )
             }
           }
         },
         test("returns ValidationException if name is missing") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = None,
             )
 
           for {
-            person                  <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForUpdate(person.id, personFormRaw).exit
+            user                  <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForUpdate(user.id, userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name is required"))
@@ -130,15 +130,15 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name is too short") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("XX"),
             )
 
           for {
-            person                  <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForUpdate(person.id, personFormRaw).exit
+            user                  <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForUpdate(user.id, userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name must be longer or equal to 3"))
@@ -146,15 +146,15 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name is too long") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some(List.fill(256)("X").mkString),
             )
 
           for {
-            person                  <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForUpdate(person.id, personFormRaw).exit
+            user                  <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForUpdate(user.id, userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name must be shorter or equal to 255"))
@@ -162,16 +162,16 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
           }
         },
         test("returns ValidationException if name already exists") {
-          val personFormRaw =
-            PersonForm.Raw(
+          val userFormRaw =
+            UserForm.Raw(
               name = Some("Ela"),
             )
 
           for {
-            person                  <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
-            _                       <- DbHelper.insertPerson(PersonEntity(name = "Ela"))
-            personValidationService <- ZIO.service[PersonValidationServiceImpl]
-            result                  <- personValidationService.validateForUpdate(person.id, personFormRaw).exit
+            user                  <- DbHelper.insertUser(UserEntity(name = "Ala"))
+            _                       <- DbHelper.insertUser(UserEntity(name = "Ela"))
+            userValidationService <- ZIO.service[UserValidationServiceImpl]
+            result                  <- userValidationService.validateForUpdate(user.id, userFormRaw).exit
           } yield assertTrue {
             result == Exit.fail {
               ValidationException(messages = Set("name Ela already exists"))
@@ -186,8 +186,8 @@ object PersonValidationServiceSpec extends ZIOSpecDefault {
   }.provide(
     FlywayServiceImpl.layer,
     FlywayConfig.layer,
-    PersonValidationServiceImpl.layer,
-    PersonRepositoryImpl.layer,
+    UserValidationServiceImpl.layer,
+    UserRepositoryImpl.layer,
     QuillContext.layer,
     DataSourceConfig.layer,
     DbHelper.layer,

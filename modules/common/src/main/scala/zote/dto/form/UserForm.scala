@@ -6,23 +6,23 @@ import zio.json.JsonCodec
 import zio.prelude.*
 import zote.Validations
 
-case class PersonForm(
+case class UserForm(
     name: String,
 )
 
-object PersonForm {
+object UserForm {
 
-  @title("PersonForm")
+  @title("UserForm")
   case class Raw(
       name: Option[String] = None,
   ) derives JsonCodec {
-    def validate: Validation[String, PersonForm] = {
+    def validate: Validation[String, UserForm] = {
       val validateName = Validations.validateRequired("name", name)(
         Validations.minLength(3),
         Validations.maxLength(255),
       )
 
-      validateName.map(PersonForm.apply)
+      validateName.map(UserForm.apply)
     }
   }
 }

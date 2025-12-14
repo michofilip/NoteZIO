@@ -2,7 +2,7 @@ package zote.helpers
 
 import io.getquill.*
 import zio.*
-import zote.Ids.{LabelId, NoteId, PersonId}
+import zote.Ids.{LabelId, NoteId, UserId}
 import zote.db.QuillContext
 import zote.db.model.*
 import zote.db.repositories.includes.given
@@ -13,11 +13,11 @@ case class DbHelper(
 
   import quillContext.*
 
-  def insertPerson(personEntity: PersonEntity): Task[PersonEntity] =
+  def insertUser(userEntity: UserEntity): Task[UserEntity] =
     transaction {
-      run(insertPersonQuery(lift(personEntity)))
+      run(insertUserQuery(lift(userEntity)))
         .map(_.head)
-        .map(id => personEntity.copy(id = PersonId(id)))
+        .map(id => userEntity.copy(id = UserId(id)))
     }
 
   def insertLabel(labelEntity: LabelEntity): Task[LabelEntity] =
@@ -41,19 +41,19 @@ case class DbHelper(
       .as(noteLabelEntity)
   }
 
-  def insertNotePerson(
-      notePersonEntity: NotePersonEntity,
-  ): Task[NotePersonEntity] = transaction {
-    run(insertNotePersonQuery(lift(notePersonEntity)))
-      .as(notePersonEntity)
+  def insertNoteUser(
+                      noteUserEntity: NoteUserEntity,
+  ): Task[NoteUserEntity] = transaction {
+    run(insertNoteUserQuery(lift(noteUserEntity)))
+      .as(noteUserEntity)
   }
 
-  private inline def insertPersonQuery = quote { (personEntity: PersonEntity) =>
+  private inline def insertUserQuery = quote { (userEntity: UserEntity) =>
     sql"""
       SELECT ID
       FROM FINAL TABLE (
-        INSERT INTO person(name)
-        VALUES (${personEntity.name})
+        INSERT INTO `user`(name)
+        VALUES (${userEntity.name})
     ) AUTHOR
     """
       .as[Query[Long]]
@@ -89,10 +89,10 @@ case class DbHelper(
       .as[Insert[Any]]
   }
 
-  private inline def insertNotePersonQuery = quote { (notePersonEntity: NotePersonEntity) =>
+  private inline def insertNoteUserQuery = quote { (noteUserEntity: NoteUserEntity) =>
     sql"""
-      INSERT INTO note_person(note_id,person_id,role) 
-      VALUES (${notePersonEntity.noteId},${notePersonEntity.personId},${notePersonEntity.role})
+      INSERT INTO note_user(note_id,user_id,role) 
+      VALUES (${noteUserEntity.noteId},${noteUserEntity.userId},${noteUserEntity.role})
     """
       .as[Insert[Any]]
   }
@@ -101,8 +101,8 @@ case class DbHelper(
 object DbHelper {
   lazy val layer = ZLayer.derive[DbHelper]
 
-  def insertPerson(personEntity: PersonEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertPerson(personEntity))
+  def insertUser(userEntity: UserEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertUser(userEntity))
 
   def insertLabel(labelEntity: LabelEntity) =
     ZIO.serviceWithZIO[DbHelper](_.insertLabel(labelEntity))
@@ -113,6 +113,6 @@ object DbHelper {
   def insertNoteLabel(noteLabelEntity: NoteLabelEntity) =
     ZIO.serviceWithZIO[DbHelper](_.insertNoteLabel(noteLabelEntity))
 
-  def insertNotePerson(notePersonEntity: NotePersonEntity) =
-    ZIO.serviceWithZIO[DbHelper](_.insertNotePerson(notePersonEntity))
+  def insertNoteUser(noteUserEntity: NoteUserEntity) =
+    ZIO.serviceWithZIO[DbHelper](_.insertNoteUser(noteUserEntity))
 }

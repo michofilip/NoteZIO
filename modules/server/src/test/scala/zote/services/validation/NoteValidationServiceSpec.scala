@@ -2,9 +2,9 @@ package zote.services.validation
 
 import zio.*
 import zio.test.*
-import zote.Ids.{LabelId, NoteId, PersonId}
-import zote.dto.form.{NoteForm, NotePersonForm}
-import zote.enums.{NotePersonRole, NoteStatus}
+import zote.Ids.{LabelId, NoteId, UserId}
+import zote.dto.form.{NoteForm, NoteUserForm}
+import zote.enums.{NoteUserRole, NoteStatus}
 import zote.exceptions.ValidationException
 
 object NoteValidationServiceSpec extends ZIOSpecDefault {
@@ -19,9 +19,9 @@ object NoteValidationServiceSpec extends ZIOSpecDefault {
               message = Some("message"),
               assignees = Some(
                 Set(
-                  NotePersonForm.Raw(
-                    personId = Some(PersonId(1)),
-                    role = Some(NotePersonRole.Owner),
+                  NoteUserForm.Raw(
+                    userId = Some(UserId(1)),
+                    role = Some(NoteUserRole.Owner),
                   ),
                 ),
               ),
@@ -39,9 +39,9 @@ object NoteValidationServiceSpec extends ZIOSpecDefault {
                 status = NoteStatus.Draft,
                 message = Some("message"),
                 assignees = Set(
-                  NotePersonForm(
-                    personId = PersonId(1),
-                    role = NotePersonRole.Owner,
+                  NoteUserForm(
+                    userId = UserId(1),
+                    role = NoteUserRole.Owner,
                   ),
                 ),
                 parentId = Some(NoteId(1)),
@@ -109,7 +109,7 @@ object NoteValidationServiceSpec extends ZIOSpecDefault {
                   status = Some(NoteStatus.Draft),
                   assignees = Some(
                     Set(
-                      NotePersonForm.Raw(),
+                      NoteUserForm.Raw(),
                     ),
                   ),
                 ),
@@ -119,7 +119,7 @@ object NoteValidationServiceSpec extends ZIOSpecDefault {
             result == Exit.fail {
               ValidationException(messages =
                 Set(
-                  "personId is required",
+                  "userId is required",
                   "role is required",
                 ),
               )

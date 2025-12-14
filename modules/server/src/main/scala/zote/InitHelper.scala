@@ -1,13 +1,13 @@
 package zote
 
 import zio.*
-import zote.dto.form.{LabelForm, NoteForm, NotePersonForm, PersonForm}
-import zote.enums.{NotePersonRole, NoteStatus}
-import zote.services.{LabelService, NoteService, PersonService}
+import zote.dto.form.{LabelForm, NoteForm, NoteUserForm, UserForm}
+import zote.enums.{NoteUserRole, NoteStatus}
+import zote.services.{LabelService, NoteService, UserService}
 
 case class InitHelper(
     private val noteService: NoteService,
-    private val personService: PersonService,
+    private val userService: UserService,
     private val labelService: LabelService,
 ) {
   def initDb(): Task[Unit] = {
@@ -16,10 +16,10 @@ case class InitHelper(
       label2 <- labelService.create(LabelForm(name = "Green"))
       label3 <- labelService.create(LabelForm(name = "Blue"))
 
-      person1 <- personService.create(PersonForm(name = "Ala"))
-      person2 <- personService.create(PersonForm(name = "Ela"))
-      person3 <- personService.create(PersonForm(name = "Ola"))
-      person4 <- personService.create(PersonForm(name = "Ula"))
+      user1 <- userService.create(UserForm(name = "Ala"))
+      user2 <- userService.create(UserForm(name = "Ela"))
+      user3 <- userService.create(UserForm(name = "Ola"))
+      user4 <- userService.create(UserForm(name = "Ula"))
 
       note1 <- noteService.create(
         NoteForm(
@@ -27,7 +27,7 @@ case class InitHelper(
           message = Some("Message 1"),
           status = NoteStatus.Draft,
           assignees = Set(
-            NotePersonForm(personId = person1.id, role = NotePersonRole.Owner),
+            NoteUserForm(userId = user1.id, role = NoteUserRole.Owner),
           ),
           parentId = None,
           labels = Set(label1.id),
@@ -39,14 +39,14 @@ case class InitHelper(
           message = Some("Message 2"),
           status = NoteStatus.Ongoing,
           assignees = Set(
-            NotePersonForm(personId = person1.id, role = NotePersonRole.Owner),
-            NotePersonForm(
-              personId = person2.id,
-              role = NotePersonRole.Maintainer,
+            NoteUserForm(userId = user1.id, role = NoteUserRole.Owner),
+            NoteUserForm(
+              userId = user2.id,
+              role = NoteUserRole.Maintainer,
             ),
-            NotePersonForm(
-              personId = person3.id,
-              role = NotePersonRole.Observer,
+            NoteUserForm(
+              userId = user3.id,
+              role = NoteUserRole.Observer,
             ),
           ),
           parentId = Some(note1.header.id),
@@ -59,7 +59,7 @@ case class InitHelper(
           message = Some("Message 3"),
           status = NoteStatus.Ongoing,
           assignees = Set(
-            NotePersonForm(personId = person3.id, role = NotePersonRole.Owner),
+            NoteUserForm(userId = user3.id, role = NoteUserRole.Owner),
           ),
           parentId = Some(note2.header.id),
           labels = Set(label2.id),
@@ -71,7 +71,7 @@ case class InitHelper(
           message = Some("Message 4"),
           status = NoteStatus.Complete,
           assignees = Set(
-            NotePersonForm(personId = person4.id, role = NotePersonRole.Owner),
+            NoteUserForm(userId = user4.id, role = NoteUserRole.Owner),
           ),
           parentId = Some(note2.header.id),
           labels = Set(label3.id),

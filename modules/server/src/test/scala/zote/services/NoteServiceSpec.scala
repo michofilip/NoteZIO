@@ -8,8 +8,8 @@ import zote.db.QuillContext
 import zote.db.model.*
 import zote.db.repositories.*
 import zote.dto.*
-import zote.dto.form.{NoteForm, NotePersonForm}
-import zote.enums.{NotePersonRole, NoteStatus}
+import zote.dto.form.{NoteForm, NoteUserForm}
+import zote.enums.{NoteUserRole, NoteStatus}
 import zote.exceptions.NotFoundException
 import zote.helpers.{DbHelper, TestAspectUtils}
 
@@ -112,18 +112,18 @@ object NoteServiceSpec extends ZIOSpecDefault {
               ),
             )
             labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            userEntity <- DbHelper.insertUser(UserEntity(name = "Ala"))
             _ <- DbHelper.insertNoteLabel(
               NoteLabelEntity(
                 noteId = noteEntity.id,
                 labelId = labelEntity.id,
               ),
             )
-            _ <- DbHelper.insertNotePerson(
-              NotePersonEntity(
+            _ <- DbHelper.insertNoteUser(
+              NoteUserEntity(
                 noteId = noteEntity.id,
-                personId = personEntity.id,
-                role = NotePersonRole.Owner,
+                userId = userEntity.id,
+                role = NoteUserRole.Owner,
               ),
             )
 
@@ -142,9 +142,9 @@ object NoteServiceSpec extends ZIOSpecDefault {
               message = noteEntity.message,
               assignees = Some(
                 List(
-                  NotePerson(
-                    person = Person(id = personEntity.id, name = personEntity.name),
-                    role = NotePersonRole.Owner,
+                  NoteUser(
+                    user = User(id = userEntity.id, name = userEntity.name),
+                    role = NoteUserRole.Owner,
                   ),
                 ),
               ),
@@ -190,7 +190,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
               ),
             )
             labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            userEntity <- DbHelper.insertUser(UserEntity(name = "Ala"))
 
             noteService <- ZIO.service[NoteService]
             note <- noteService.create(
@@ -199,9 +199,9 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 message = Some("message"),
                 status = NoteStatus.Ongoing,
                 assignees = Set(
-                  NotePersonForm(
-                    personId = personEntity.id,
-                    role = NotePersonRole.Owner,
+                  NoteUserForm(
+                    userId = userEntity.id,
+                    role = NoteUserRole.Owner,
                   ),
                 ),
                 parentId = Some(parentNoteEntity.id),
@@ -221,9 +221,9 @@ object NoteServiceSpec extends ZIOSpecDefault {
               message = Some("message"),
               assignees = Some(
                 List(
-                  NotePerson(
-                    person = Person(id = personEntity.id, name = personEntity.name),
-                    role = NotePersonRole.Owner,
+                  NoteUser(
+                    user = User(id = userEntity.id, name = userEntity.name),
+                    role = NoteUserRole.Owner,
                   ),
                 ),
               ),
@@ -260,7 +260,7 @@ object NoteServiceSpec extends ZIOSpecDefault {
               ),
             )
             labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            userEntity <- DbHelper.insertUser(UserEntity(name = "Ala"))
 
             noteService <- ZIO.service[NoteService]
             note <- noteService.update(
@@ -270,9 +270,9 @@ object NoteServiceSpec extends ZIOSpecDefault {
                 message = Some("message"),
                 status = NoteStatus.Complete,
                 assignees = Set(
-                  NotePersonForm(
-                    personId = personEntity.id,
-                    role = NotePersonRole.Owner,
+                  NoteUserForm(
+                    userId = userEntity.id,
+                    role = NoteUserRole.Owner,
                   ),
                 ),
                 parentId = Some(parentNoteEntity.id),
@@ -297,9 +297,9 @@ object NoteServiceSpec extends ZIOSpecDefault {
               message = Some("message"),
               assignees = Some(
                 List(
-                  NotePerson(
-                    person = Person(id = personEntity.id, name = personEntity.name),
-                    role = NotePersonRole.Owner,
+                  NoteUser(
+                    user = User(id = userEntity.id, name = userEntity.name),
+                    role = NoteUserRole.Owner,
                   ),
                 ),
               ),
@@ -364,18 +364,18 @@ object NoteServiceSpec extends ZIOSpecDefault {
               ),
             )
             labelEntity  <- DbHelper.insertLabel(LabelEntity(name = "Red"))
-            personEntity <- DbHelper.insertPerson(PersonEntity(name = "Ala"))
+            userEntity <- DbHelper.insertUser(UserEntity(name = "Ala"))
             _ <- DbHelper.insertNoteLabel(
               NoteLabelEntity(
                 noteId = noteEntity.id,
                 labelId = labelEntity.id,
               ),
             )
-            _ <- DbHelper.insertNotePerson(
-              NotePersonEntity(
+            _ <- DbHelper.insertNoteUser(
+              NoteUserEntity(
                 noteId = noteEntity.id,
-                personId = personEntity.id,
-                role = NotePersonRole.Owner,
+                userId = userEntity.id,
+                role = NoteUserRole.Owner,
               ),
             )
 
@@ -405,12 +405,12 @@ object NoteServiceSpec extends ZIOSpecDefault {
     FlywayServiceImpl.layer,
     FlywayConfig.layer,
     NoteServiceImpl.layer,
-    PersonServiceImpl.layer,
+    UserServiceImpl.layer,
     LabelServiceImpl.layer,
     NoteRepositoryImpl.layer,
     LabelRepositoryImpl.layer,
-    PersonRepositoryImpl.layer,
-    NotePersonRepositoryImpl.layer,
+    UserRepositoryImpl.layer,
+    NoteUserRepositoryImpl.layer,
     NoteLabelRepositoryImpl.layer,
     QuillContext.layer,
     DataSourceConfig.layer,

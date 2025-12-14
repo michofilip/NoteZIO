@@ -2,16 +2,16 @@ package zote.routes
 
 import com.raquo.laminar.api.L.{*, given}
 import frontroute.*
-import zote.pages.{NotFoundPage, PersonListPage, PersonPage}
+import zote.pages.{NotFoundPage, UserListPage, UserPage}
 
-object PersonsRoutes {
+object UsersRoutes {
   def apply() = {
     div(
       pathEnd {
-        PersonListPage()
+        UserListPage()
       },
-      path(long) { personId =>
-        PersonPage(personId)
+      path(long) { userId =>
+        UserPage(userId)
       },
       noneMatched {
         NotFoundPage()

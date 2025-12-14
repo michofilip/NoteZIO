@@ -14,8 +14,8 @@ object Routes {
         pathPrefix("notes") {
           NotesRoutes()
         },
-        pathPrefix("persons") {
-          PersonsRoutes()
+        pathPrefix("users") {
+          UsersRoutes()
         },
         pathPrefix("labels") {
           LabelsRoutes()
