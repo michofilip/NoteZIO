@@ -6,7 +6,7 @@ import zote.db.QuillContext
 
 object TestAspectUtils {
 
-  val rollback: TestAspect.PerTest[Nothing, QuillContext, Throwable, Throwable] =
+  val rollback: TestAspect.PerTest[Nothing, QuillContext, Throwable, Throwable] = {
     new TestAspect.PerTest {
       override def perTest[R >: Nothing <: QuillContext, E >: Throwable <: Throwable](
           test: ZIO[R, TestFailure[E], TestSuccess],
@@ -22,7 +22,8 @@ object TestAspectUtils {
           }
         } yield testResult
 
-        testResult.catchAll { e => ZIO.left(TestFailure.fail(e)) }.absolve
+        testResult.catchAll(e => ZIO.left(TestFailure.fail(e))).absolve
       }
     }
+  }
 }
