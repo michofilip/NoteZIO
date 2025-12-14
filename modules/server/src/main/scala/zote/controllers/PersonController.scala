@@ -12,7 +12,7 @@ import zote.endpoints.PersonEndpoints
 import zote.services.PersonService
 import zote.services.validation.PersonValidationService
 
-class PersonController(
+case class PersonController(
     private val personService: PersonService,
     private val personValidationService: PersonValidationService,
 ) extends Controller

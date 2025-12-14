@@ -12,7 +12,7 @@ import zote.endpoints.LabelEndpoints
 import zote.services.LabelService
 import zote.services.validation.LabelValidationService
 
-class LabelController(
+case class LabelController(
     private val labelService: LabelService,
     private val labelValidationService: LabelValidationService,
 ) extends Controller

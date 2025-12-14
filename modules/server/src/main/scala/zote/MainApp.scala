@@ -1,41 +1,28 @@
 package zote
 
-import sttp.tapir.server.interceptor.cors.CORSInterceptor
-import sttp.tapir.server.ziohttp.{ZioHttpInterpreter, ZioHttpServerOptions}
 import zio.*
-import zio.http.Server
 import zote.config.*
 import zote.controllers.*
 import zote.db.QuillContext
 import zote.db.repositories.*
+import zote.server.AppServer
 import zote.services.*
 import zote.services.validation.{LabelValidationServiceImpl, NoteValidationServiceImpl, PersonValidationServiceImpl}
 
 object MainApp extends ZIOAppDefault {
 
   private val app = for {
-    _ <- FlywayService.run
-
-    routes        <- HttpApi.routesZIO
-    swaggerRoutes <- SwaggerApi.routesZIO
-    port          <- Server.install(
-      ZioHttpInterpreter(
-        ZioHttpServerOptions.default.appendInterceptor(
-          CORSInterceptor.default,
-        ),
-      ).toHttp(routes ++ swaggerRoutes),
-    )
-
-    _ <- ZIO.logInfo("Welcome to Zote")
-    _ <- ZIO.logInfo(s"Server started at port: $port")
-
-    _ <- InitHelper.initDb()
-
-    _ <- ZIO.never
+    _    <- FlywayService.run
+    _    <- InitHelper.initDb()
+    port <- ZIO.serviceWithZIO[AppServer](_.install)
+    _    <- ZIO.logInfo("Welcome to Zote")
+    _    <- ZIO.logInfo(s"Server started at port: $port")
+    _    <- ZIO.never
   } yield ()
 
   def run = app
     .provide(
+      AppServer.layer,
       FlywayServiceImpl.layer,
       FlywayConfig.layer,
       NoteController.layer,
@@ -59,5 +46,4 @@ object MainApp extends ZIOAppDefault {
       InitHelper.layer,
 //      ZLayer.Debug.mermaid,
     )
-    .exitCode
 }
