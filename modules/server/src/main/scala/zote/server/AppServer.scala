@@ -20,17 +20,12 @@ case class AppServer(
   )
 
   def install: ZIO[Server, Nothing, Int] = {
-    val routes        = controllers.flatMap(_.routes)
     val endpoints     = controllers.flatMap(_.endpoints)
+    val routes        = controllers.flatMap(_.routes)
     val swaggerRoutes = SwaggerInterpreter().fromEndpoints[Task](endpoints, "Zote", "0.1.0-SNAPSHOT")
+    val serverOptions = ZioHttpServerOptions.default[Any].appendInterceptor(CORSInterceptor.default)
 
-    Server.install(
-      ZioHttpInterpreter(
-        ZioHttpServerOptions.default.appendInterceptor(
-          CORSInterceptor.default,
-        ),
-      ).toHttp(routes ++ swaggerRoutes),
-    )
+    Server.install(ZioHttpInterpreter(serverOptions).toHttp(routes ++ swaggerRoutes))
   }
 }
 
