@@ -9,6 +9,5 @@ case class BackendClientConfig(
 )
 
 object BackendClientConfig {
-  lazy val layer =
-    ZLayer.succeed(BackendClientConfig(uri"http://localhost:8080"))
+  lazy val layer = ZLayer.succeed(BackendClientConfig(uri"http://localhost:8080"))
 }

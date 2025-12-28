@@ -1,13 +1,16 @@
 package zote.components
 
 import com.raquo.laminar.api.L.{*, given}
+import zote.utils.Paths
 
 object Header {
   def apply() = {
     div(
-      div(a(href := "/notes", "Notes")),
-      div(a(href := "/users", "Users")),
-      div(a(href := "/labels", "Labels")),
+      ul(
+        li(div(a(href := Paths.notes, "Notes"))),
+        li(div(a(href := Paths.users, "Users"))),
+        li(div(a(href := Paths.labels, "Labels"))),
+      ),
     )
   }
 }

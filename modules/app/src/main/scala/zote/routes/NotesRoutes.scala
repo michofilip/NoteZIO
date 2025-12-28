@@ -2,16 +2,17 @@ package zote.routes
 
 import com.raquo.laminar.api.L.{*, given}
 import frontroute.*
-import zote.pages.{NotFoundPage, NoteListPage, NotePage}
+import zote.Ids.NoteId
+import zote.pages.{NotFoundPage, NotePage, NotesPage}
 
 object NotesRoutes {
   def apply() = {
     div(
       pathEnd {
-        NoteListPage()
+        NotesPage()
       },
       path(long) { noteId =>
-        NotePage(noteId)
+        NotePage(NoteId(noteId))
       },
       noneMatched {
         NotFoundPage()

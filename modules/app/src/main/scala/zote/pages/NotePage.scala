@@ -1,28 +1,29 @@
 package zote.pages
 
 import com.raquo.laminar.api.L.{*, given}
-import zote.components.Labels
-import zote.dto.Note
-import zote.utils.BackendClient
+import zote.Ids.NoteId
+import zote.components.note.*
+import zote.services.NoteResponseService
 
 object NotePage {
-  def apply(noteId: Long) = {
-    val note   = Var(Option.empty[Note])
-    val labels =
-      note.signal.map(_.flatMap(_.header.labels).getOrElse(List.empty))
+  def apply(noteId: NoteId) = {
+    val noteSignal = NoteResponseService.get.map(_.flatMap(_.data))
 
     div(
-//      onMountCallback(_ => BackendClient.notes.getById(noteId)(n => note.set(Some(n)))),
-      s"Note $noteId",
-      div(
-        child <-- note.signal.map(_.map { note =>
-          div(
-            div(note.header.title),
-            Labels(labels),
-            div(note.message),
-          )
-        }.getOrElse(emptyNode)),
-      ),
+      onMountCallback(_ => NoteResponseService.fetch(noteId)),
+      child.maybe <-- noteSignal.splitOption { case (_, note) =>
+        val noteHeader = note.map(_.header)
+
+        div(
+          NoteTitle.pretty(noteHeader),
+          NoteStatus(noteHeader),
+          NoteLabels(noteHeader),
+          NoteUsers(note),
+          ParentNote(note),
+          ChildrenNotes(note),
+          NoteMessage(note),
+        )
+      },
     )
   }
 }

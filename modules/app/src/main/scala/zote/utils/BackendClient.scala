@@ -5,15 +5,13 @@ import sttp.client4.impl.zio.FetchZioBackend
 import sttp.tapir.Endpoint
 import sttp.tapir.client.sttp4.SttpClientInterpreter
 import zio.*
+import zote.Ids.NoteId
 import zote.config.BackendClientConfig
 import zote.dto.response.{NoteResponse, NotesResponse, UserResponse, UsersResponse}
-import zote.dto.{Note, NoteHeader, User}
 import zote.endpoints.{NoteEndpoints, UserEndpoints}
 
 case class BackendClient(
     private val config: BackendClientConfig,
-//    private val interpreter: SttpClientInterpreter,
-//    private val backend: SttpBackend[Task, ZioStreams & WebSockets]
 ) {
   private val backend     = FetchZioBackend()
   private val interpreter = SttpClientInterpreter()
@@ -30,7 +28,6 @@ case class BackendClient(
   private def request[I, E, O](
       endpoint: Endpoint[Unit, I, E, O, Any],
   ): I => Request[Either[E, O]] = {
-//  ): I => Request[Either[E, O], Any] = {
     interpreter.toRequestThrowDecodeFailures(endpoint, Some(config.baseUri))
   }
 
@@ -44,8 +41,8 @@ object BackendClient {
     def getAll(consumer: NotesResponse => Unit) =
       performRequest(noteEndpoints.getAllEndpoint)(())(consumer)
 
-    def getById(id: Long)(consumer: NoteResponse => Unit) =
-      performRequest(noteEndpoints.getByIdEndpoint)(id)(consumer)
+    def getById(id: NoteId)(consumer: NoteResponse => Unit) =
+      performRequest(noteEndpoints.getByIdEndpoint)(id.value)(consumer)
   }
 
   object users {
