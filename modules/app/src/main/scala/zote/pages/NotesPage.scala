@@ -6,7 +6,7 @@ import zote.services.NotesResponseService
 
 object NotesPage {
   def apply() = {
-    val noteHeaders = NotesResponseService.get.map(_.flatMap(_.data))
+    val noteHeaders = NotesResponseService.getNoteHeaders
 
     div(
       onMountCallback(_ => NotesResponseService.fetch()),

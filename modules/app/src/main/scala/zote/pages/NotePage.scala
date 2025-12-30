@@ -7,11 +7,11 @@ import zote.services.NoteResponseService
 
 object NotePage {
   def apply(noteId: NoteId) = {
-    val noteSignal = NoteResponseService.get.map(_.flatMap(_.data))
+    val note = NoteResponseService.getNote
 
     div(
       onMountCallback(_ => NoteResponseService.fetch(noteId)),
-      child.maybe <-- noteSignal.splitOption { case (_, note) =>
+      child.maybe <-- note.splitOption { case (_, note) =>
         val noteHeader = note.map(_.header)
 
         div(

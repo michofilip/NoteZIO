@@ -1,8 +1,8 @@
-package zote.services
+package zote.utils
 
 import com.raquo.laminar.api.L.{*, given}
 
-trait ResponseService[T] {
+trait DataStore[T] {
   protected val data: Var[Option[T]] = Var(None)
 
   def set(value: T): Unit = data.set(Some(value))
@@ -12,10 +12,10 @@ trait ResponseService[T] {
   def clear(): Unit = data.set(None)
 }
 
-trait Fetch {
+trait Fetch { this: DataStore[?] =>
   def fetch(): Unit
 }
 
-trait FetchById[Id] {
+trait FetchById[Id] { this: DataStore[?] =>
   def fetch(id: Id): Unit
 }

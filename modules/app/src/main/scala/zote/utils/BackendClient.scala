@@ -60,7 +60,7 @@ object BackendClient {
   private def performRequest[I, E <: Throwable, O](
       endpoint: Endpoint[Unit, I, E, O, Any],
   )(payload: I)(consumer: O => Unit): Fiber.Runtime[Throwable, O] = {
-    Unsafe.unsafe { case given Unsafe =>
+    Unsafe.unsafely {
       Runtime.default.unsafe.fork(
         ZIO
           .serviceWithZIO[BackendClient](
