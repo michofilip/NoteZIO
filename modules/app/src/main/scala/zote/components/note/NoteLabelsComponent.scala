@@ -3,7 +3,7 @@ package zote.components.note
 import com.raquo.laminar.api.L.{*, given}
 import zote.dto.NoteHeader
 
-object NoteLabels {
+object NoteLabelsComponent {
   def apply(noteHeader: Signal[NoteHeader]) = {
     val labels = noteHeader.map(_.labels.getOrElse(List.empty))
 

@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 import zote.dto.NoteHeader
 import zote.utils.Paths
 
-object NoteTitle {
+object NoteTitleComponent {
   def link(noteHeader: Signal[NoteHeader]) = {
     div(
       a(
@@ -16,6 +16,7 @@ object NoteTitle {
 
   def pretty(noteHeader: Signal[NoteHeader]) = {
     div(
+      dataAttr("bs-theme") := "dark",
       h1(child <-- noteHeader.map(_.title)),
     )
   }

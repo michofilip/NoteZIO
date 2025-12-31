@@ -4,7 +4,7 @@ import com.raquo.laminar.api.L.{*, given}
 import zote.Ids.NoteId
 import zote.dto.NoteHeader
 
-object NoteHeadersTable {
+object NoteHeadersComponent {
 
   def apply(noteHeaders: Signal[List[NoteHeader]]) = {
     div(
@@ -34,9 +34,9 @@ object NoteHeadersTable {
 
   private def renderRow(noteHeader: Signal[NoteHeader]) = {
     tr(
-      td(NoteTitle.link(noteHeader)),
-      td(NoteStatus(noteHeader)),
-      td(NoteLabels(noteHeader)),
+      td(NoteTitleComponent.link(noteHeader)),
+      td(NoteStatusComponent(noteHeader)),
+      td(NoteLabelsComponent(noteHeader)),
     )
   }
 

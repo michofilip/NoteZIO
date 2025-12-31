@@ -3,12 +3,10 @@ package zote.components.note
 import com.raquo.laminar.api.L.{*, given}
 import zote.dto.Note
 
-object ParentNote {
+object NoteMessageComponent {
   def apply(note: Signal[Note]) = {
     div(
-      child.maybe <-- note.map(_.parentNote).splitOption { case (_, noteHeader) =>
-        NoteTitle.link(noteHeader)
-      },
+      child.maybe <-- note.map(_.message).splitOption { case (message, _) => span(message) },
     )
   }
 }

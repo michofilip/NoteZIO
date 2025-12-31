@@ -3,7 +3,7 @@ package zote.components.note
 import com.raquo.laminar.api.L.{*, given}
 import zote.dto.Note
 
-object NoteUsers {
+object NoteUsersComponent {
   def apply(note: Signal[Note]) = {
     val assignees = note.map(_.assignees.getOrElse(Nil))
 
