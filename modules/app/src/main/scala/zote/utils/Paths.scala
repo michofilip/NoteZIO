@@ -11,15 +11,15 @@ object Paths {
 
   def contains(path: String): Signal[Boolean] = pathname.signal.map(_.contains(path))
 
-  private val notesStr  = "notes"
-  private val usersStr  = "users"
-  private val labelsStr = "labels"
+  val notesPrefix  = "notes"
+  val usersPrefix  = "users"
+  val labelsPrefix = "labels"
 
-  def notes              = s"/$notesStr"
-  def note(id: NoteId)   = s"/$notesStr/$id"
-  def users              = s"/$usersStr"
-  def user(id: UserId)   = s"/$usersStr/$id"
-  def labels             = s"/$labelsStr"
-  def label(id: LabelId) = s"/$labelsStr/$id"
+  def notes              = s"/$notesPrefix"
+  def note(id: NoteId)   = s"/$notesPrefix/$id"
+  def users              = s"/$usersPrefix"
+  def user(id: UserId)   = s"/$usersPrefix/$id"
+  def labels             = s"/$labelsPrefix"
+  def label(id: LabelId) = s"/$labelsPrefix/$id"
 
 }

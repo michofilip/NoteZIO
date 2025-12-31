@@ -3,21 +3,22 @@ package zote.routes
 import com.raquo.laminar.api.L.{*, given}
 import frontroute.*
 import zote.pages.*
+import zote.utils.Paths
 
 object Routes {
   def apply() = {
     routes(
       div(
         pathEnd {
-          navigate("notes", replace = true)
+          navigate(Paths.notesPrefix, replace = true)
         },
-        pathPrefix("notes") {
+        pathPrefix(Paths.notesPrefix) {
           NotesRoutes()
         },
-        pathPrefix("users") {
+        pathPrefix(Paths.usersPrefix) {
           UsersRoutes()
         },
-        pathPrefix("labels") {
+        pathPrefix(Paths.labelsPrefix) {
           LabelsRoutes()
         },
         noneMatched {
