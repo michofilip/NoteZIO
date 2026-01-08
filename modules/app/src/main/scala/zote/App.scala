@@ -17,6 +17,8 @@ object App {
 
   private def app() = {
     div(
+      // TODO implement dark mode
+//      dataAttr("bs-theme") := "dark",
       HeaderComponent(),
       Routes(),
     )

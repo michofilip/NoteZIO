@@ -11,6 +11,7 @@ object NotePage {
 
     div(
       onMountCallback(_ => NoteResponseService.fetch(noteId)),
+      onUnmountCallback(_ => NoteResponseService.clear()),
       child.maybe <-- note.splitOption { case (_, note) =>
         NoteComponent(note)
       },

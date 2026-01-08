@@ -2,7 +2,7 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 
 ThisBuild / scalaVersion := "3.7.4"
 
-val zioVersion        = "2.1.23"
+val zioVersion        = "2.1.24"
 val zioJsonVersion    = "0.7.45"
 val zioConfigVersion  = "4.0.6"
 val zioLoggingVersion = "2.5.2"
@@ -12,7 +12,7 @@ val quillVersion      = "4.8.6"
 val h2Version         = "2.4.240"
 val flywayVersion     = "11.20.0"
 val quicklensVersion  = "1.9.12"
-val tapirVersion      = "1.13.3"
+val tapirVersion      = "1.13.4"
 val sttpVersion       = "4.0.13"
 val frontrouteVersion = "0.19.1"
 

@@ -40,14 +40,13 @@ object HeaderComponent {
 
   private def navItem(path: String, description: String) = {
     val isActive = Paths.contains(path)
-    val classes  = isActive.map(active => List("nav-link") ++ Option.when(active)("active"))
-    val current  = isActive.map(active => if (active) "page" else "")
 
     li(
       cls := "nav-item",
       a(
-        cls <-- classes,
-        aria.current <-- current,
+        cls := "nav-link",
+        cls("active") <-- isActive,
+        aria.current <-- isActive.map(if (_) "page" else ""),
         href := path,
         description,
       ),

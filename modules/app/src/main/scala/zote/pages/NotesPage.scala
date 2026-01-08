@@ -10,6 +10,7 @@ object NotesPage {
 
     div(
       onMountCallback(_ => NotesResponseService.fetch()),
+      onUnmountCallback(_ => NotesResponseService.clear()),
       child.maybe <-- noteHeaders.splitOption { case (_, noteHeaders) =>
         NotesComponent(noteHeaders)
       },
